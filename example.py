@@ -3,13 +3,15 @@ import time
 from environment.world import World
 from environment.env import Env
 
+# Enable this if you want to print out the entire grid.
+# np.set_printoptions(threshold=np.inf)
 
 grid_size = 32
 
-world = World(grid_size=grid_size, n_agents=1, flag_size=1)
+env = Env(grid_size=grid_size, n_agents=1, flag_size=1)
+initial = env.reset()
 
-env = Env(world=world)
-env.reset()
+start = time.process_time_ns()
 
 for _ in range(env.horizon): 
     env.render()
@@ -19,3 +21,7 @@ for _ in range(env.horizon):
         env.close()
         break
     time.sleep(1 / env.horizon)
+
+end = time.process_time_ns()
+
+print(end-start)

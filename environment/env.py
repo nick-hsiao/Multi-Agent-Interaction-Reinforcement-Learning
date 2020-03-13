@@ -9,7 +9,7 @@ class Env(gym.Env):
         'render.modes': ['human'],
     }
 
-    def __init__(self, world=World(), horizon=250, screen_size=512):
+    def __init__(self, horizon=250, screen_size=512, grid_size=32, n_agents=1, flag_size=1):
         self.vec_actions = {
             0 : (0, 0),
             1: (0, 1),
@@ -20,11 +20,16 @@ class Env(gym.Env):
         self.horizon = horizon
         self.screen_size = screen_size
 
-        self.world = world
+        self.world = World(grid_size=grid_size, n_agents=n_agents, flag_size=flag_size)
         self.viewer = None
         self.action_space = spaces.Discrete(5)
 
     def step(self, action):
+        '''
+            Take actions in the environment.
+            Args:
+                action (List): A list of actions. Each action corresponds to each own agent.
+        '''
         actions = []
         for agent_action in action:
             assert self.action_space.contains(agent_action)
@@ -42,7 +47,7 @@ class Env(gym.Env):
             if(pos in obs['flag_pos']):
                 done = True
 
-        return obs, reward, done, None
+        return obs['agent_obs'], reward, done, None
 
     def render(self, mode='human'):
         if mode == 'human':
@@ -55,10 +60,10 @@ class Env(gym.Env):
             raise ValueError("Unsupported mode.")
 
     def reset(self):
-        self.world.reset()
+        state = self.world.reset()
+        return state['agent_obs']
     
     def close(self):
         if self.viewer:
             self.viewer.close()
             self.viewer = None
-
