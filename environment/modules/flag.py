@@ -1,6 +1,6 @@
 import numpy as np
-from modules.module import EnvModule
-from modules.util import placement_fn
+from environment.modules.module import EnvModule
+from environment.modules.util import placement_fn
 from gym.envs.classic_control import rendering
 
 class Flag(EnvModule):

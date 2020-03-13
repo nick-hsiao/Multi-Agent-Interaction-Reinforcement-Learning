@@ -1,7 +1,7 @@
 import numpy as np
 import time
-from world import World
-from env import Env
+from environment.world import World
+from environment.env import Env
 
 
 grid_size = 32
