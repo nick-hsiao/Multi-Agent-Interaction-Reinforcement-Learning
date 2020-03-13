@@ -1,6 +1,6 @@
 import gym
 import numpy as np
-from world import World
+from environment.world import World
 from gym import spaces
 from gym.envs.classic_control import rendering
 

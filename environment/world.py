@@ -1,7 +1,7 @@
 import numpy as np
-from modules.walls import Walls
-from modules.agents import Agents
-from modules.flag import Flag
+from environment.modules.walls import Walls
+from environment.modules.agents import Agents
+from environment.modules.flag import Flag
 
 class World():
     def __init__(self, grid_size=32, horizon=250, n_agents=1, flag_size=2):

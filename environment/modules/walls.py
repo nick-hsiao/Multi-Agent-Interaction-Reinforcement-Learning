@@ -1,5 +1,5 @@
 import numpy as np
-from modules.module import EnvModule
+from environment.modules.module import EnvModule
 from gym.envs.classic_control import rendering
 
 class Wall:
