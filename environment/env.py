@@ -22,20 +22,13 @@ class Env(gym.Env):
 
         self.world = World(grid_size=grid_size, n_agents=n_agents, flag_size=flag_size)
         self.viewer = None
-        self.action_space = spaces.Discrete(5)
+        self.action_space = spaces.MultiDiscrete([5] * n_agents)
+
+        self.observation_space = spaces.Box(low = 0, high=1, shape=(grid_size, grid_size, n_agents))
 
     def step(self, action):
-        '''
-            Take actions in the environment.
-            Args:
-                action (List): A list of actions. Each action corresponds to each own agent.
-        '''
         actions = []
-        for agent_action in action:
-            assert self.action_space.contains(agent_action)
-
-            vec_action = self.vec_actions[agent_action]
-            actions.append(vec_action)
+        actions = [self.vec_actions[agent_action] for agent_action in action]
 
         self.world.set_action(actions)
         obs = self.world.get_observation()
