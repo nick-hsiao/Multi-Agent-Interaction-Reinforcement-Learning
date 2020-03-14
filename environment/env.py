@@ -9,7 +9,7 @@ class Env(gym.Env):
         'render.modes': ['human'],
     }
 
-    def __init__(self, world=World(), horizon=250, screen_size=512):
+    def __init__(self, horizon=250, screen_size=512, grid_size=32, n_agents=1, flag_size=1):
         self.vec_actions = {
             0 : (0, 0),
             1: (0, 1),
@@ -20,17 +20,15 @@ class Env(gym.Env):
         self.horizon = horizon
         self.screen_size = screen_size
 
-        self.world = world
+        self.world = World(grid_size=grid_size, n_agents=n_agents, flag_size=flag_size)
         self.viewer = None
-        self.action_space = spaces.Discrete(5)
+        self.action_space = spaces.MultiDiscrete([5] * n_agents)
+
+        self.observation_space = spaces.Box(low = 0, high=1, shape=(grid_size, grid_size, n_agents))
 
     def step(self, action):
         actions = []
-        for agent_action in action:
-            assert self.action_space.contains(agent_action)
-
-            vec_action = self.vec_actions[agent_action]
-            actions.append(vec_action)
+        actions = [self.vec_actions[agent_action] for agent_action in action]
 
         self.world.set_action(actions)
         obs = self.world.get_observation()
@@ -42,7 +40,7 @@ class Env(gym.Env):
             if(pos in obs['flag_pos']):
                 done = True
 
-        return obs, reward, done, None
+        return obs['agent_obs'], reward, done, None
 
     def render(self, mode='human'):
         if mode == 'human':
@@ -55,10 +53,10 @@ class Env(gym.Env):
             raise ValueError("Unsupported mode.")
 
     def reset(self):
-        self.world.reset()
+        state = self.world.reset()
+        return state['agent_obs']
     
     def close(self):
         if self.viewer:
             self.viewer.close()
             self.viewer = None
-

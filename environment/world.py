@@ -18,10 +18,24 @@ class World():
         self.modules = [self.walls, self.agents, self.flag]
 
     def get_observation(self):
+        '''
+            Each agents has its own observation. 
+            The observation is a placement grid but only obstacles that are in that agents line of sight are filled in.
+            Line of sight is defined as a box around the agent of radius grid_size // 8
+        '''
         obs = {}
 
         for module in self.modules:
             obs.update(module.observation_step(self))
+
+        agent_obs = []
+
+        for agent_pos in obs['agent_pos']:
+            curr = np.zeros((self.grid_size, self.grid_size))
+            self.get_agent_obs(agent_pos, curr)
+            agent_obs.append(curr)
+
+        obs['agent_obs'] = agent_obs
 
         return obs
 
@@ -54,4 +68,13 @@ class World():
 
     def reset(self):
         self.get_world()
-        self.state = self.get_observation()
+        return self.get_observation()
+
+    
+    def get_agent_obs(self, pos, grid):
+        radius = self.grid_size // 8
+        for x in range((pos[0] - radius), (pos[0] + radius + 1)):
+            for y in range((pos[1] - radius), (pos[1] + radius + 1)):
+                if x >= 0 and x < self.grid_size and y >= 0 and y < self.grid_size:
+                    grid[x][y] = self.placement_grid[x][y]
+                
