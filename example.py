@@ -1,30 +1,21 @@
-import numpy as np
-import time
-from environment.world import World
-from environment.env import Env
+from tf_agents.environments import tf_py_environment
+from tf_agents.policies import random_tf_policy
+from env import CTFEnv
+from tf_agents.environments import wrappers
+import imageio
 
-# Enable this if you want to print out the entire grid.
-# np.set_printoptions(threshold=np.inf)
+py_env = wrappers.TimeLimit(CTFEnv(), duration=100)
 
-grid_size = 32
+env = tf_py_environment.TFPyEnvironment(py_env)
 
-env = Env(grid_size=grid_size, n_agents=1, flag_size=1)
-initial = env.reset()
+policy = random_tf_policy.RandomTFPolicy(
+    env.time_step_spec(), 
+    env.action_spec()
+)
 
-print(env.action_space)
-print(env.observation_space)
-
-start = time.process_time_ns()
-
-for _ in range(env.horizon): 
-    env.render()
-    obs, reward, done, _ = env.step(env.action_space.sample()) # Take a random action
-    if done:
-        print("Got to the flag!")
-        env.close()
-        break
-    time.sleep(1 / env.horizon)
-
-end = time.process_time_ns()
-
-print(end-start)
+time_step = env.reset()
+print(time_step)
+while not time_step.is_last():
+    action_step = policy.action(time_step)
+    time_step = env.step(action_step.action)
+    print(time_step.observation)
