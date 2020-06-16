@@ -3,4 +3,4 @@ Applying reinforcement learning techniques to multiple agents in a custom enviro
 
 To install external packages:
 
-pip install -r requirements.txt
+"pip install -r requirements.txt"
