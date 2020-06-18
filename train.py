@@ -1,6 +1,6 @@
 from __future__ import absolute_import, division, print_function
 import gym
-import gym_ctf
+## import gym_ctf
 
 import numpy as np
 np.set_printoptions(threshold=np.inf)
