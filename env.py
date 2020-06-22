@@ -174,7 +174,7 @@ class CTFEnv(py_environment.PyEnvironment):
                 x = np.random.randint(self.grid_size)
                 y = np.random.randint(self.grid_size)
                 if x != self.agent_pos[0] and y != self.agent_pos[1] and x != self.flag_pos[0] and y != self.flag_pos[1]:
-                    wall_pos.append(np.random.randint(self.grid_size))
-                    wall_pos.append(np.random.randint(self.grid_size))
+                    wall_pos.append(x)
+                    wall_pos.append(y)
                     found = True
         return wall_pos
