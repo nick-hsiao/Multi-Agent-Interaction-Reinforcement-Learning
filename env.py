@@ -10,9 +10,11 @@ tf.compat.v1.enable_v2_behavior()
 
 class CTFEnv(py_environment.PyEnvironment):
     def __init__(self, grid_size=16 , screen_size=512, num_walls=4):
+        #Set grid
         self.grid_size = grid_size
         self.placement_grid = np.zeros((self.grid_size, self.grid_size), dtype=np.uint8)
 
+        #Set walls, agent, and flag
         self.num_walls = num_walls
         self.agent_pos = self.get_agent_pos()
         self.flag_pos = self.get_flag_pos()
@@ -36,6 +38,7 @@ class CTFEnv(py_environment.PyEnvironment):
 
         self._state= self.get_state()
         
+        #Start episode
         self._episode_ended = False
 
         self.screen_size = screen_size
@@ -50,6 +53,8 @@ class CTFEnv(py_environment.PyEnvironment):
     
     def _reset(self):
         self.step_count = 0
+
+        #Collect positions of agent, flag, and wall. Then reset grid.
         self.agent_pos = self.get_agent_pos()
         self.flag_pos = self.get_flag_pos()
         self.wall_pos = self.get_wall_pos()
@@ -59,16 +64,30 @@ class CTFEnv(py_environment.PyEnvironment):
         return ts.restart(self._state)
 
     def _step(self, action):
+
+        #Increase "step" by 1
         self.step_count += 1
+
+        #Reset if episode ended
         if self._episode_ended:
             return self.reset()
 
         self.move(action)
 
+        #If game is over, end episode.
         if self.game_over():
             self._episode_ended = True
 
+        #stop when step_count is 200
+        #if self.step_count==200:
+        #    self._episode_ended = True
+        #    print("Step 200 is step ")
+        #    print(self.step_count)
+
         if self._episode_ended:
+            #If episode ended:
+            # (i) If game over, then give reward
+            # (ii) If game not over, no reward
             if self.game_over():
                 reward = 100
             else:
@@ -95,24 +114,25 @@ class CTFEnv(py_environment.PyEnvironment):
         if action == 3: #right
             if col + 1  < self.grid_size and self.placement_grid[row][col+1] != 3:
                 self._state[1] += 1
-        if action == 4:
+        if action == 4: #diagonal. go right and up
             if row + 1 < self.grid_size and col + 1 < self.grid_size and self.placement_grid[row+1][col+1] != 3:
                 self._state[0] += 1
                 self._state[1] += 1
-        if action == 5:
+        if action == 5: #diagonal. go right and down
             if row - 1 >= 0 and col + 1 < self.grid_size and self.placement_grid[row-1][col+1] != 3:
                 self._state[0] -= 1
                 self._state[1] += 1
-        if action == 6:
+        if action == 6: #diagonal. go left and down
             if row - 1 >= 0 and col - 1 >= 0 and self.placement_grid[row-1][col-1] != 3:
                 self._state[0] -= 1
                 self._state[1] -= 1
-        if action == 7:
+        if action == 7: #diagonal. go left and up
             if row + 1 < self.grid_size and col - 1 >= 0 and self.placement_grid[row+1][col-1] != 3:
                 self._state[0] += 1
                 self._state[1] -= 1
         self.placement_grid[self._state[0], self._state[1]] = 1
     
+    #Game over when agent reaches flag
     def game_over(self):
         row, col, frow, fcol = self._state[0],self._state[1],self._state[2],self._state[3]
         return row==frow and col==fcol
@@ -126,6 +146,7 @@ class CTFEnv(py_environment.PyEnvironment):
         for i in range(0, len(self.wall_pos), 2):
             self.placement_grid[self.wall_pos[i]][self.wall_pos[i+1]] = 3
     
+    #Set color
     def render(self, mode='rgb_array'):
         frame = np.full((self.screen_size, self.screen_size, 3), 255, dtype=np.uint8)
         for ix,iy in np.ndindex(self.placement_grid.shape):
@@ -138,6 +159,7 @@ class CTFEnv(py_environment.PyEnvironment):
                 self.fill_color(frame, ix, iy, [0, 0, 0])
         return np.flipud(frame)
     
+    #Fill color
     def fill_color(self, frame, x, y, color):
         l = x * self.block_size
         r = l + self.block_size
@@ -158,14 +180,17 @@ class CTFEnv(py_environment.PyEnvironment):
 
         return np.array(state, dtype=np.int32)
 
+    #Agent position
     def get_agent_pos(self):
         return (np.random.randint(self.grid_size), np.random.randint(self.grid_size))
         # return (0, 0)
 
+    #Flag position
     def get_flag_pos(self):
         return (np.random.randint(self.grid_size), np.random.randint(self.grid_size))
         # return (15, 15)
 
+    #Wall position
     def get_wall_pos(self):
         wall_pos = []
         for _ in range(self.num_walls):
