@@ -202,4 +202,8 @@ class CTFEnv(py_environment.PyEnvironment):
                     wall_pos.append(x)
                     wall_pos.append(y)
                     found = True
+<<<<<<< HEAD
         return wall_pos
+=======
+        return wall_pos
+>>>>>>> c89e0a841711596e02170e6a148939361bd16c1c
