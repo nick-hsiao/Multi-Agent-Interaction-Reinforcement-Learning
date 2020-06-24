@@ -9,28 +9,36 @@ from tf_agents.trajectories import time_step as ts
 tf.compat.v1.enable_v2_behavior()
 
 class CTFEnv(py_environment.PyEnvironment):
-    def __init__(self, grid_size=16, initial_agent_pos=(0, 0), screen_size=512, wall_pos=(5, 5)):
+    def __init__(self, grid_size=16 , screen_size=512, num_walls=4):
+        #Set grid
         self.grid_size = grid_size
         self.placement_grid = np.zeros((self.grid_size, self.grid_size), dtype=np.uint8)
-        self.initial_agent_pos = initial_agent_pos
+
+        #Set walls, agent, and flag
+        self.num_walls = num_walls
+        self.agent_pos = self.get_agent_pos()
         self.flag_pos = self.get_flag_pos()
-        self.wall_pos = wall_pos
+        # wall_pos is a list because of multiple walls
+        self.wall_pos = self.get_wall_pos()
 
         self._action_spec = array_spec.BoundedArraySpec(
             shape=(), dtype=np.int32, minimum=0, maximum=7, name='action')
 
+        # total params:
+        # x,y agent = 2 +
+        # x,y flag = 2 +
+        # x,y of each wall = 2 * num_walls
+        total_params = 4 + (self.num_walls * 2)
+        
         self._observation_spec = array_spec.BoundedArraySpec(
-            shape=(4,), dtype=np.int32, minimum=[0,0,0,0],maximum=[grid_size-1,grid_size-1,grid_size-1,grid_size-1], name='observation')
+            shape=(total_params,), dtype=np.int32, 
+            minimum= np.zeros((total_params,), dtype=np.int32),
+            maximum= np.full((total_params,), self.grid_size-1, dtype=np.int32), 
+            name='observation')
+
+        self._state= self.get_state()
         
-        self._state=[
-            initial_agent_pos[0],
-            initial_agent_pos[1],
-            self.flag_pos[0],
-            self.flag_pos[1],
-            wall_pos[0],
-            wall_pos[1]
-        ] #represent the (row, col, frow, fcol) of the player and the finish
-        
+        #Start episode
         self._episode_ended = False
 
         self.screen_size = screen_size
@@ -45,35 +53,54 @@ class CTFEnv(py_environment.PyEnvironment):
     
     def _reset(self):
         self.step_count = 0
+
+        #Collect positions of agent, flag, and wall. Then reset grid.
+        self.agent_pos = self.get_agent_pos()
         self.flag_pos = self.get_flag_pos()
+        self.wall_pos = self.get_wall_pos()
         self.reset_grid()
-        self._state=[self.initial_agent_pos[0],self.initial_agent_pos[1],
-                        self.flag_pos[0],self.flag_pos[1]] 
+        self._state= self.get_state()
         self._episode_ended = False
-        return ts.restart(np.array(self._state, dtype=np.int32))
+        return ts.restart(self._state)
 
     def _step(self, action):
+
+        #Increase "step" by 1
         self.step_count += 1
+
+        #Reset if episode ended
         if self._episode_ended:
             return self.reset()
 
         self.move(action)
 
+        #If game is over, end episode.
         if self.game_over():
             self._episode_ended = True
 
+        #stop when step_count is 200
+        #if self.step_count==200:
+        #    self._episode_ended = True
+        #    print("Step 200 is step ")
+        #    print(self.step_count)
+
         if self._episode_ended:
+            #If episode ended:
+            # (i) If game over, then give reward
+            # (ii) If game not over, no reward
             if self.game_over():
                 reward = 100
             else:
                 reward = 0
-            return ts.termination(np.array(self._state, dtype=np.int32), reward)
+            return ts.termination(self._state, reward)
         else:
             return ts.transition(
-                np.array(self._state, dtype=np.int32), reward=0, discount=0.9)
+                self._state, reward=0, discount=0.9)
     
     def move(self, action):
+        # Get the current position of the agent.
         row, col = self._state[0],self._state[1]
+        # Set the position in the grid to 0 because we are about to move away from it.
         self.placement_grid[row, col] = 0
         if action == 0: #down
             if row - 1 >= 0 and self.placement_grid[row-1][col] != 3:
@@ -87,56 +114,39 @@ class CTFEnv(py_environment.PyEnvironment):
         if action == 3: #right
             if col + 1  < self.grid_size and self.placement_grid[row][col+1] != 3:
                 self._state[1] += 1
-        if action == 4:
+        if action == 4: #diagonal. go right and up
             if row + 1 < self.grid_size and col + 1 < self.grid_size and self.placement_grid[row+1][col+1] != 3:
                 self._state[0] += 1
                 self._state[1] += 1
-        if action == 5:
+        if action == 5: #diagonal. go right and down
             if row - 1 >= 0 and col + 1 < self.grid_size and self.placement_grid[row-1][col+1] != 3:
                 self._state[0] -= 1
                 self._state[1] += 1
-        if action == 6:
+        if action == 6: #diagonal. go left and down
             if row - 1 >= 0 and col - 1 >= 0 and self.placement_grid[row-1][col-1] != 3:
                 self._state[0] -= 1
                 self._state[1] -= 1
-        if action == 7:
+        if action == 7: #diagonal. go left and up
             if row + 1 < self.grid_size and col - 1 >= 0 and self.placement_grid[row+1][col-1] != 3:
                 self._state[0] += 1
                 self._state[1] -= 1
         self.placement_grid[self._state[0], self._state[1]] = 1
     
+    #Game over when agent reaches flag
     def game_over(self):
         row, col, frow, fcol = self._state[0],self._state[1],self._state[2],self._state[3]
         return row==frow and col==fcol
     
     def reset_grid(self):
-        self.placement_grid[self._state[0]][self._state[1]] = 0
-        self.placement_grid[self._state[2]][self._state[3]] = 0
-        self.placement_grid[0][5] = 3
-        self.placement_grid[1][5] = 3
-        self.placement_grid[2][5] = 3
-        self.placement_grid[3][5] = 3
-        self.placement_grid[4][5] = 3
-        self.placement_grid[5][5] = 3
-       
-        '''
-        self.placement_grid[3][9] = 3
-        self.placement_grid[4][9] = 3
-        self.placement_grid[5][9] = 3
-        self.placement_grid[6][9] = 3
-        self.placement_grid[7][9] = 3
-        self.placement_grid[8][9] = 3
-        self.placement_grid[9][9] = 3
-        self.placement_grid[10][9] = 3
-        self.placement_grid[11][9] = 3
-        self.placement_grid[12][9] = 3
-        self.placement_grid[13][9] = 3
-        self.placement_grid[14][9] = 3
-        self.placement_grid[15][9] = 3
-        '''
-        self.placement_grid[self.initial_agent_pos[0]][self.initial_agent_pos[1]] = 1
+        for i in range(0, len(self._state), 2):
+            self.placement_grid[self._state[i]][self._state[i+1]] = 0
+
+        self.placement_grid[self.agent_pos[0]][self.agent_pos[1]] = 1
         self.placement_grid[self.flag_pos[0]][self.flag_pos[1]] = 2
+        for i in range(0, len(self.wall_pos), 2):
+            self.placement_grid[self.wall_pos[i]][self.wall_pos[i+1]] = 3
     
+    #Set color
     def render(self, mode='rgb_array'):
         frame = np.full((self.screen_size, self.screen_size, 3), 255, dtype=np.uint8)
         for ix,iy in np.ndindex(self.placement_grid.shape):
@@ -149,6 +159,7 @@ class CTFEnv(py_environment.PyEnvironment):
                 self.fill_color(frame, ix, iy, [0, 0, 0])
         return np.flipud(frame)
     
+    #Fill color
     def fill_color(self, frame, x, y, color):
         l = x * self.block_size
         r = l + self.block_size
@@ -158,6 +169,37 @@ class CTFEnv(py_environment.PyEnvironment):
             for j in range(l, r):
                 frame[i, j] = color
     
+    def get_state(self):
+        state = [
+            self.agent_pos[0],
+            self.agent_pos[1],
+            self.flag_pos[0],
+            self.flag_pos[1],
+        ]
+        state.extend(self.wall_pos)
+
+        return np.array(state, dtype=np.int32)
+
+    #Agent position
+    def get_agent_pos(self):
+        return (np.random.randint(self.grid_size), np.random.randint(self.grid_size))
+        # return (0, 0)
+
+    #Flag position
     def get_flag_pos(self):
-        # return (np.random.randint(self.grid_size), self.grid_size - 1)
-        return (7, 15)
+        return (np.random.randint(self.grid_size), np.random.randint(self.grid_size))
+        # return (15, 15)
+
+    #Wall position
+    def get_wall_pos(self):
+        wall_pos = []
+        for _ in range(self.num_walls):
+            found = False
+            while not found:
+                x = np.random.randint(self.grid_size)
+                y = np.random.randint(self.grid_size)
+                if x != self.agent_pos[0] and y != self.agent_pos[1] and x != self.flag_pos[0] and y != self.flag_pos[1]:
+                    wall_pos.append(x)
+                    wall_pos.append(y)
+                    found = True
+        return wall_pos

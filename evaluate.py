@@ -13,6 +13,7 @@ env = tf_py_environment.TFPyEnvironment(py_env)
 
 policy = tf.saved_model.load(model_path)
 
+#Video of 5 simulations
 with imageio.get_writer(filename, fps=15) as video:
     for _ in range(5):
         time_step = env.reset()

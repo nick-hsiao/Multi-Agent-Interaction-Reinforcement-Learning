@@ -43,7 +43,7 @@ log_interval = 200  # @param {type:"integer"}
 num_eval_episodes = 10  # @param {type:"integer"}
 eval_interval = 1000  # @param {type:"integer"}
 
-
+#Simulation will last 200 steps
 train_py_env = wrappers.TimeLimit(CTFEnv(), duration=200)
 eval_py_env = wrappers.TimeLimit(CTFEnv(), duration=200)
 
