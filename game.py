@@ -10,7 +10,7 @@ def make_video():
 	os.system("python3 evaluate.py")
 
 root = tk.Tk()
-root.geometry("550x550")
+root.geometry("700x550")
 root.title("Multi-Agent Interaction")
 
 def quit():
@@ -20,7 +20,7 @@ btn1 = tk.Button(root, text="Run Program", command=play)
 video = tk.Button(root, text="Create Video", command=make_video)
 quit = tk.Button(root, text="Quit", command=quit)
 
-background_image=ImageTk.PhotoImage(Image.open("images/landing.gif").resize((550, 400)))
+background_image=ImageTk.PhotoImage(Image.open("images/landing.gif").resize((683, 384)))
 background_label = tk.Label(root, image=background_image)
 
 #Add text
