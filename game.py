@@ -10,8 +10,8 @@ def make_video():
 	os.system("python3 evaluate.py")
 
 root = tk.Tk()
-root.geometry("550x530")
-root.title("GUI Button")
+root.geometry("550x550")
+root.title("Multi-Agent Interaction")
 
 def quit():
 	root.destroy()
@@ -23,6 +23,13 @@ quit = tk.Button(root, text="Quit", command=quit)
 background_image=ImageTk.PhotoImage(Image.open("images/landing.gif").resize((550, 400)))
 background_label = tk.Label(root, image=background_image)
 
+#Add text
+text = tk.Label(root, text="Welcome to Multi-Agent Interaction!")
+
+#Change text size, from https://stackoverflow.com/questions/30685308/how-do-i-change-the-text-size-in-a-label-widget-python-tkinter
+text.config(font=("Arial", 25))
+
+text.pack(pady = (0,0))
 background_label.pack()
 btn1.pack(pady=(0,10))
 video.pack(pady=(0,10))
