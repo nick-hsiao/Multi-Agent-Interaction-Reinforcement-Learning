@@ -120,31 +120,31 @@ class CTFEnv(py_environment.PyEnvironment):
         # Set the position in the grid to 0 because we are about to move away from it.
         self.placement_grid[row, col] = 0
         if action == 0: #down
-            if row - 1 >= 0 and self.placement_grid[row-1][col] != 3:
+            if row - 1 >= 0 and self.placement_grid[row-1][col] != 3 and self.placement_grid[row-1][col] != 4:
                 self._state[0] -= 1
         if action == 1: #up
-            if row + 1 < self.grid_size and self.placement_grid[row+1][col] != 3:
+            if row + 1 < self.grid_size and self.placement_grid[row+1][col] != 3 and self.placement_grid[row+1][col] != 4:
                 self._state[0] += 1
         if action == 2: #left
-            if col - 1 >= 0 and self.placement_grid[row][col-1] != 3:
+            if col - 1 >= 0 and self.placement_grid[row][col-1] != 3 and self.placement_grid[row][col-1] != 4:
                 self._state[1] -= 1
         if action == 3: #right
-            if col + 1  < self.grid_size and self.placement_grid[row][col+1] != 3:
+            if col + 1  < self.grid_size and self.placement_grid[row][col+1] != 3 and self.placement_grid[row][col+1] != 4:
                 self._state[1] += 1
         if action == 4: #diagonal. go right and up
-            if row + 1 < self.grid_size and col + 1 < self.grid_size and self.placement_grid[row+1][col+1] != 3:
+            if row + 1 < self.grid_size and col + 1 < self.grid_size and self.placement_grid[row+1][col+1] != 3 and self.placement_grid[row+1][col+1] != 4:
                 self._state[0] += 1
                 self._state[1] += 1
         if action == 5: #diagonal. go right and down
-            if row - 1 >= 0 and col + 1 < self.grid_size and self.placement_grid[row-1][col+1] != 3:
+            if row - 1 >= 0 and col + 1 < self.grid_size and self.placement_grid[row-1][col+1] != 3 and self.placement_grid[row-1][col+1] != 4:
                 self._state[0] -= 1
                 self._state[1] += 1
         if action == 6: #diagonal. go left and down
-            if row - 1 >= 0 and col - 1 >= 0 and self.placement_grid[row-1][col-1] != 3:
+            if row - 1 >= 0 and col - 1 >= 0 and self.placement_grid[row-1][col-1] != 3 and self.placement_grid[row-1][col-1] != 4:
                 self._state[0] -= 1
                 self._state[1] -= 1
         if action == 7: #diagonal. go left and up
-            if row + 1 < self.grid_size and col - 1 >= 0 and self.placement_grid[row+1][col-1] != 3:
+            if row + 1 < self.grid_size and col - 1 >= 0 and self.placement_grid[row+1][col-1] != 3 and self.placement_grid[row+1][col-1] != 4:
                 self._state[0] += 1
                 self._state[1] -= 1
         self.placement_grid[self._state[0], self._state[1]] = 1
@@ -172,31 +172,31 @@ class CTFEnv(py_environment.PyEnvironment):
             return
 
         if action == 0: #down
-            if row - 1 >= 0 and self.placement_grid[row-1][col] != 3:
+            if row - 1 >= 0 and self.placement_grid[row-1][col] != 3 and self.placement_grid[row-1][col] != 1 and self.placement_grid[row-1][col] != 4:
                 self._state[index] -= 1
         if action == 1: #up
-            if row + 1 < self.grid_size and self.placement_grid[row+1][col] != 3:
+            if row + 1 < self.grid_size and self.placement_grid[row+1][col] != 3 and self.placement_grid[row+1][col] != 1 and self.placement_grid[row+1][col] != 4:
                 self._state[index] += 1
         if action == 2: #left
-            if col - 1 >= 0 and self.placement_grid[row][col-1] != 3:
+            if col - 1 >= 0 and self.placement_grid[row][col-1] != 3 and self.placement_grid[row][col-1] != 1 and self.placement_grid[row][col-1] != 4:
                 self._state[index+1] -= 1
         if action == 3: #right
-            if col + 1  < self.grid_size and self.placement_grid[row][col+1] != 3:
+            if col + 1  < self.grid_size and self.placement_grid[row][col+1] != 3 and self.placement_grid[row][col+1] != 1 and self.placement_grid[row][col+1] != 4:
                 self._state[index+1] += 1
         if action == 4: #diagonal. go right and up
-            if row + 1 < self.grid_size and col + 1 < self.grid_size and self.placement_grid[row+1][col+1] != 3:
+            if row + 1 < self.grid_size and col + 1 < self.grid_size and self.placement_grid[row+1][col+1] != 3 and self.placement_grid[row+1][col+1] != 1 and self.placement_grid[row+1][col+1] != 4:
                 self._state[index] += 1
                 self._state[index+1] += 1
         if action == 5: #diagonal. go right and down
-            if row - 1 >= 0 and col + 1 < self.grid_size and self.placement_grid[row-1][col+1] != 3:
+            if row - 1 >= 0 and col + 1 < self.grid_size and self.placement_grid[row-1][col+1] != 3 and self.placement_grid[row-1][col+1] != 1 and self.placement_grid[row-1][col+1] != 4:
                 self._state[index] -= 1
                 self._state[index+1] += 1
         if action == 6: #diagonal. go left and down
-            if row - 1 >= 0 and col - 1 >= 0 and self.placement_grid[row-1][col-1] != 3:
+            if row - 1 >= 0 and col - 1 >= 0 and self.placement_grid[row-1][col-1] != 3 and self.placement_grid[row-1][col-1] != 1 and self.placement_grid[row-1][col-1] != 4:
                 self._state[index] -= 1
                 self._state[index+1] -= 1
         if action == 7: #diagonal. go left and up
-            if row + 1 < self.grid_size and col - 1 >= 0 and self.placement_grid[row+1][col-1] != 3:
+            if row + 1 < self.grid_size and col - 1 >= 0 and self.placement_grid[row+1][col-1] != 3 and self.placement_grid[row+1][col-1] != 1 and self.placement_grid[row+1][col-1] != 4:
                 self._state[index] += 1
                 self._state[index+1] -= 1
 
@@ -296,16 +296,12 @@ class CTFEnv(py_environment.PyEnvironment):
             while not found:
                 x = np.random.randint(self.grid_size)
                 y = np.random.randint(self.grid_size)
-                if x != self.agent_pos[0] and y != self.agent_pos[1] and x != self.flag_pos[0] and y != self.flag_pos[1]:
+
+                #Spawn in empty location
+                if self.placement_grid[x, y] == 0:
                     agent2_pos.append(x)
                     agent2_pos.append(y)
                     found = True
         return agent2_pos
 
-                    #for i in range(0,len(self.wall_pos)):
-                        #if x != self.wall_pos[i] and y != self.wall_pos[i+1]
-                        #    agent2_pos.append(x)
-                        #    agent2_pos.append(y)
-                        #    found = True
-                        #    i= i+1
-                        #return agent2_pos
+                    
