@@ -15,20 +15,19 @@ class CTFEnv(py_environment.PyEnvironment):
         self.placement_grid = np.zeros((self.grid_size, self.grid_size), dtype=np.uint8)
 
 
-        self.num_agents = num_agents
-
-
         #Set walls, agent, and flag
-        self.num_walls = num_walls# (num_walls +self.num_agents)*2
-
+        self.num_walls = num_walls
         self.agent_pos = self.get_agent_pos()
         self.flag_pos = self.get_flag_pos()
+
+        #set agents
+        self.num_agents = num_agents
+
         # wall_pos is a list because of multiple walls
         self.wall_pos = self.get_wall_pos()
 
         # agent2_pos to store multiple agents
         self.agent2_pos = self.get_agent2_pos()
-        #self.num_agents = 4
 
         self._action_spec = array_spec.BoundedArraySpec(
             shape=(), dtype=np.int32, minimum=0, maximum=7, name='action')
@@ -37,7 +36,7 @@ class CTFEnv(py_environment.PyEnvironment):
         # x,y agent = 2 +
         # x,y flag = 2 +
         # x,y of each wall = 2 * num_walls
-        total_params = 4 + (self.num_walls * 2)  + (self.num_agents*2) #the extra 4 represented 4 extra agents
+        total_params = 4 + (self.num_walls * 2)  + (self.num_agents*2) 
         
         self._observation_spec = array_spec.BoundedArraySpec(
             shape=(total_params,), dtype=np.int32, 
@@ -67,12 +66,10 @@ class CTFEnv(py_environment.PyEnvironment):
         self.agent_pos = self.get_agent_pos()
         self.flag_pos = self.get_flag_pos()
         self.wall_pos = self.get_wall_pos()
+        self.agent2_pos = self.get_agent2_pos()
         self.reset_grid()
         self._state= self.get_state()
         self._episode_ended = False
-
-
-        self.agent2_pos = self.get_agent2_pos()
 
 
         return ts.restart(self._state)
@@ -90,10 +87,9 @@ class CTFEnv(py_environment.PyEnvironment):
         self.move(action)
         
         #Move separate agents
-        for i in range(0,self.num_agents):
+        for i in range(0,(self.num_agents*2),2):
             self.move2(action,4+(self.num_walls*2)+i)
-            #add 1 to i so i can increase twice per loop
-            i = i+1
+ 
 
         #If game is over, end episode.
         if self.game_over():
@@ -156,15 +152,24 @@ class CTFEnv(py_environment.PyEnvironment):
     #Allows separate agents to move
     def move2(self, action, index):
     # Get the current position of the agent.
+        # Get the current position of the agent.
         row, col = self._state[index],self._state[index+1]
+        # Set the position in the grid to 0 because we are about to move away from it.
+        self.placement_grid[row, col] = 0
 
         #Stop agent if agent reaches flag
         if self._state[index] == self._state[2] and self._state[index+1] == self._state[3]:
-            return
+            #Reset flag color
+            self.placement_grid[row, col] = 2
 
-        # Set the position in the grid to 0 because we are about to move away from it.
-        #self.placement_grid[self._state[index], self._state[index+1]] = 0
-        self.placement_grid[row, col] = 0
+            #Vanish from map
+            self._state[index] = -1
+            self._state[index+1] = -1
+            return
+        
+        #Stop if agent is not in map
+        if self._state[index+1] == -1 or self._state[index] == -1:
+            return
 
         if action == 0: #down
             if row - 1 >= 0 and self.placement_grid[row-1][col] != 3:
@@ -194,6 +199,8 @@ class CTFEnv(py_environment.PyEnvironment):
             if row + 1 < self.grid_size and col - 1 >= 0 and self.placement_grid[row+1][col-1] != 3:
                 self._state[index] += 1
                 self._state[index+1] -= 1
+
+        self.placement_grid[row, col] = 0
         self.placement_grid[self._state[index], self._state[index+1]] = 4
     
     #Game over when agent reaches flag
@@ -250,9 +257,8 @@ class CTFEnv(py_environment.PyEnvironment):
             self.flag_pos[0],
             self.flag_pos[1],
         ]
-        state.extend(self.agent2_pos)
         state.extend(self.wall_pos)
-        #state.extend(self.agent2_pos)
+        state.extend(self.agent2_pos)
 
         return np.array(state, dtype=np.int32)
 
