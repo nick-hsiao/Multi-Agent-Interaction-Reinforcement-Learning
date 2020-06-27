@@ -91,18 +91,20 @@ class CTFEnv(py_environment.PyEnvironment):
         if self._episode_ended:
             return self.reset()
 
-        self.move(np.random.randint(7))
-        #self.move(action)
-        
-        #Move separate stealer agents
-        for i in range(0,(self.num_sagents*2),2):
-            #self.move2(action,4+(self.num_walls*2)+i)
-            self.move2(np.random.randint(7),4+(self.num_walls*2)+i)
-
         #Move separate defender agents
         for i in range(0,(self.num_dagents*2),2):
             #self.move3(action,4+(self.num_walls*2)+i)
             self.move3(np.random.randint(7),4+(self.num_walls*2)+(self.num_sagents*2)+i)
+
+        #This was added after move3 because there is a condition that checks if space has been occupied by defender. If you move this before move3, then the condition will not work
+        self.move(np.random.randint(7))
+        #self.move(action)
+        
+        #Move separate stealer agents
+        #This was added after move3 because there is a condition that checks if space has been occupied by defender. If you move this before move3, then the condition will not work
+        for i in range(0,(self.num_sagents*2),2):
+            #self.move2(action,4+(self.num_walls*2)+i)
+            self.move2(np.random.randint(7),4+(self.num_walls*2)+i)
             
  
 
@@ -110,26 +112,65 @@ class CTFEnv(py_environment.PyEnvironment):
         if self.game_over():
             self._episode_ended = True
 
-        #stop when step_count is 200
-        #if self.step_count==200:
-        #    self._episode_ended = True
-        #    print("Step 200 is step ")
-        #    print(self.step_count)
-
         if self._episode_ended:
+
             #If episode ended:
             # (i) If game over, then give reward
             # (ii) If game not over, no reward
             if self.game_over():
+                print("Flag was captured")
+                print("Game over")
                 reward = 100
             else:
+                print("Game over")
                 reward = 0
             return ts.termination(self._state, reward)
         else:
             return ts.transition(
                 self._state, reward=0, discount=0.9)
+
+    def all_agents_captured(self):
+
+        over = False
+
+        #total by adding a bunch of -1 cooridnates. Start off with -2 for main agent from state[0] and state[1]
+        total = self._state[0] + self._state[1]
+
+        num_coordinates = 2
+
+        #End game if all stealer agents are stopped
+        for i in range(4+(self.num_walls*2), 4+(self.num_walls*2)+(self.num_sagents*2),2):
+
+            num_coordinates = num_coordinates + 2
+
+            total = total + self._state[i] + self._state[i+1]
+
+        total = total * -1
+
+        if num_coordinates == total:
+            over = True
+
+            
+        if over == True:
+
+            print("Showing coordinates x y of all stealer agents")
+            print(self._state[0])
+            print(self._state[1])
+            #End game if all stealer agents are stopped
+            for i in range(4+(self.num_walls*2), 4+(self.num_walls*2)+(self.num_sagents*2),2):
+
+                print(self._state[i])
+                print(self._state[i+1])
+
+            print("All stealers have been stopped")
+            self._episode_ended = True       
     
     def move(self, action):
+
+        #If agent is outside map, agent should not move
+        if self._state[0] == -1 and self._state[1] == -1:
+            return
+
         # Get the current position of the agent.
         row, col = self._state[0],self._state[1]
         # Set the position in the grid to 0 because we are about to move away from it.
@@ -162,7 +203,17 @@ class CTFEnv(py_environment.PyEnvironment):
             if row + 1 < self.grid_size and col - 1 >= 0 and self.placement_grid[row+1][col-1] != 3 and self.placement_grid[row+1][col-1] != 4:
                 self._state[0] += 1
                 self._state[1] -= 1
-        self.placement_grid[self._state[0], self._state[1]] = 1
+
+        #Stop agent if stealer agent touches defender
+        if self.placement_grid[self._state[0], self._state[1]] == 5:
+
+            #Vanish from map
+            self._state[0] = -1
+            self._state[1] = -1
+
+            self.all_agents_captured()
+        else:
+            self.placement_grid[self._state[0], self._state[1]] = 1
 
     #Allows separate stealer agents to move
     def move2(self, action, index):
@@ -171,6 +222,10 @@ class CTFEnv(py_environment.PyEnvironment):
         row, col = self._state[index],self._state[index+1]
         # Set the position in the grid to 0 because we are about to move away from it.
         self.placement_grid[row, col] = 0
+
+        #If agent is outside map, agent should not move
+        if self._state[index] == -1 and self._state[index+1] == -1:
+            return
 
         #Stop agent if agent reaches flag
         if self._state[index] == self._state[2] and self._state[index+1] == self._state[3]:
@@ -219,7 +274,19 @@ class CTFEnv(py_environment.PyEnvironment):
                 self._state[index+1] -= 1
 
         self.placement_grid[row, col] = 0
-        self.placement_grid[self._state[index], self._state[index+1]] = 4
+
+        
+        #Stop agent if stealer agent touches defender
+        if self.placement_grid[self._state[index], self._state[index+1]] == 5:
+
+            #Vanish from map
+            self._state[index] = -1
+            self._state[index+1] = -1
+
+            self.all_agents_captured()
+
+        else:
+            self.placement_grid[self._state[index], self._state[index+1]] = 4
     
     #Allows separate defender agents to move
     def move3(self, action, index):
@@ -262,9 +329,24 @@ class CTFEnv(py_environment.PyEnvironment):
         self.placement_grid[self._state[index], self._state[index+1]] = 5
 
     #Game over when agent reaches flag
+    #def game_over(self):
+    #    row, col, frow, fcol = self._state[0],self._state[1],self._state[2],self._state[3]
+    #    return row==frow and col==fcol
+
+    #Game over when agent reaches flag
     def game_over(self):
+        over = False
+
         row, col, frow, fcol = self._state[0],self._state[1],self._state[2],self._state[3]
-        return row==frow and col==fcol
+        if row==frow and col==fcol:
+            over = True
+
+        #Check if at least one agent reached flag
+        for i in range(4+(self.num_walls*2), 4+(self.num_walls*2)+(self.num_sagents),2):
+            if(self._state[i] == self._state[2] and self._state[i+1] == self._state[3]):
+                over = True
+
+        return over
     
     def reset_grid(self):
         for i in range(0, len(self._state), 2):
@@ -382,5 +464,3 @@ class CTFEnv(py_environment.PyEnvironment):
                     dagent_pos.append(y)
                     found = True
         return dagent_pos
-
-                    
