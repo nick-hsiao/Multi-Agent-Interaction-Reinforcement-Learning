@@ -9,7 +9,7 @@ from tf_agents.trajectories import time_step as ts
 tf.compat.v1.enable_v2_behavior()
 
 class CTFEnv(py_environment.PyEnvironment):
-    def __init__(self, grid_size=16 , screen_size=512, num_walls=4, num_sagents=1, num_dagents=0):
+    def __init__(self, grid_size=16, screen_size=512, num_walls=200, num_sagents=10, num_dagents=10):
         #Set grid
         self.grid_size = grid_size
         self.placement_grid = np.zeros((self.grid_size, self.grid_size), dtype=np.uint8)
@@ -121,12 +121,14 @@ class CTFEnv(py_environment.PyEnvironment):
             # (i) If game over, then give reward
             # (ii) If game not over, no reward
             if self.game_over():
+                #reward = 25000
                 reward = 100
             else:
                 reward = 0
             return ts.termination(self._state, reward)
         else:
             return ts.transition(
+                #self._state, reward=0, discount=50.00)
                 self._state, reward=0, discount=0.9)
 
     def all_agents_captured(self):
@@ -403,7 +405,7 @@ class CTFEnv(py_environment.PyEnvironment):
                 y = np.random.randint(self.grid_size)
 
                 #Spawn in empty location
-                if self.placement_grid[x, y] == 0:
+                if self.placement_grid[x, y] == 0 and x != self.flag_pos[0] and y != self.flag_pos[1]:
                     sagent_pos.append(x)
                     sagent_pos.append(y)
                     found = True
@@ -419,7 +421,7 @@ class CTFEnv(py_environment.PyEnvironment):
                 y = np.random.randint(self.grid_size)
 
                 #Spawn in empty location
-                if self.placement_grid[x, y] == 0:
+                if self.placement_grid[x, y] == 0 and x != self.flag_pos[0] and y != self.flag_pos[1]:
                     dagent_pos.append(x)
                     dagent_pos.append(y)
                     found = True
