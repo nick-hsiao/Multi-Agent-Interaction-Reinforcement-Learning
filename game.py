@@ -3,6 +3,8 @@ import os
 import tkinter as tk
 from PIL import Image, ImageTk
 
+
+#User interface of application, written by Aliaksandr Nenartovich
 def play():
 	os.system("python3 train.py")
 

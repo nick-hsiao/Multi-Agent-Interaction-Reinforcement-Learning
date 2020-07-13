@@ -8,12 +8,12 @@ from tf_agents.trajectories import time_step as ts
 
 tf.compat.v1.enable_v2_behavior()
 
+#Code from the following links were used: https://www.tensorflow.org/agents/tutorials/1_dqn_tutorial and https://towardsdatascience.com/tf-agents-tutorial-a63399218309
 class CTFEnv(py_environment.PyEnvironment):
-    def __init__(self, grid_size=16, screen_size=512, num_walls=200, num_sagents=10, num_dagents=10):
+    def __init__(self, grid_size=16, screen_size=512, num_walls=5, num_sagents=1, num_dagents=0):
         #Set grid
         self.grid_size = grid_size
         self.placement_grid = np.zeros((self.grid_size, self.grid_size), dtype=np.uint8)
-
 
         #Set walls, agent, and flag
         self.num_walls = num_walls
@@ -39,12 +39,11 @@ class CTFEnv(py_environment.PyEnvironment):
             shape=(), dtype=np.int32, minimum=0, maximum=7, name='action')
 
         # total params:
-        # x,y agent = 2 +
         # x,y flag = 2 +
         # x,y of each wall = 2 * num_walls
-        #total_params = 4 + (self.num_walls * 2)  + (self.num_sagents*2) + (self.num_dagents*2) 
         total_params = 2 + (self.num_walls * 2)  + (self.num_sagents*2) + (self.num_dagents*2) 
         
+        #Observation spec, written by Josh Gendein, borrowed and modified from https://towardsdatascience.com/tf-agents-tutorial-a63399218309
         self._observation_spec = array_spec.BoundedArraySpec(
             shape=(total_params,), dtype=np.int32, 
             minimum= np.zeros((total_params,), dtype=np.int32),
@@ -70,7 +69,6 @@ class CTFEnv(py_environment.PyEnvironment):
         self.step_count = 0
 
         #Collect positions of agent, flag, and wall. Then reset grid.
-        #self.agent_pos = self.get_agent_pos()
         self.flag_pos = self.get_flag_pos()
         self.wall_pos = self.get_wall_pos()
         self.sagent_pos = self.get_sagent_pos()
@@ -83,38 +81,31 @@ class CTFEnv(py_environment.PyEnvironment):
         return ts.restart(self._state)
 
 
+    #Step method, from https://towardsdatascience.com/tf-agents-tutorial-a63399218309. Modified by Josh Gendein and Richard Pham
     def _step(self, action):
 
-        #Increase "step" by 1
+        #Increase "step" by 1. Written by Josh Gendein
         self.step_count += 1
 
-        #Reset if episode ended
+        #Reset if episode ended. Written by Josh Gendein
         if self._episode_ended:
             return self.reset()
 
-        #Move separate defender agents
+        #Move separate defender agents. Written by Richard Pham
         for i in range(0,(self.num_dagents*2),2):
-            #self.move3(action,4+(self.num_walls*2)+i)
-            #self.move3(np.random.randint(7),4+(self.num_walls*2)+(self.num_sagents*2)+i)
             self.move3(np.random.randint(7),2+(self.num_walls*2)+(self.num_sagents*2)+i)
-
-        #This was added after move3 because there is a condition that checks if space has been occupied by defender. If you move this before move3, then the condition will not work
-        #self.move(np.random.randint(7))
-        #self.move(action)
         
-        #Move separate stealer agents
+        #Move separate stealer agents. Written by Richard Pham
         #This was added after move3 because there is a condition that checks if space has been occupied by defender. If you move this before move3, then the condition will not work
         for i in range(0,(self.num_sagents*2),2):
-            #self.move2(action,4+(self.num_walls*2)+i)
-            #self.move2(np.random.randint(7),4+(self.num_walls*2)+i)
-            self.move2(np.random.randint(7),2+(self.num_walls*2)+i)
+            self.move2(action,2+(self.num_walls*2)+i)
             
- 
 
-        #If game is over, end episode.
+        #If game is over, end episode. Written by Josh Gendein
         if self.game_over():
             self._episode_ended = True
 
+        #Written by Josh Gendein
         if self._episode_ended:
 
             #If episode ended:
@@ -131,11 +122,12 @@ class CTFEnv(py_environment.PyEnvironment):
                 #self._state, reward=0, discount=50.00)
                 self._state, reward=0, discount=0.9)
 
+    #Check if all agents were captured. Written by Richard Pham
     def all_agents_captured(self):
 
         over = False
 
-        #total by adding a bunch of -1 cooridnates.
+        #total by adding a bunch of -1 coordinates.
         total = 0
 
         num_coordinates = 0
@@ -158,31 +150,18 @@ class CTFEnv(py_environment.PyEnvironment):
             #End game if all stealer agents are stopped
             self._episode_ended = True       
 
-        #Stop agent if stealer agent touches defender
-        #if self.placement_grid[self._state[0], self._state[1]] == 5:
-
-            #Vanish from map
-        #    self._state[0] = -1
-        #    self._state[1] = -1
-
-        #    self.all_agents_captured()
-        #else:
-        #    self.placement_grid[self._state[0], self._state[1]] = 1
-
-    #Allows separate stealer agents to move
+    #Allows separate stealer agents to move. Method was originally written by Josh Gendein but modified by Richard Pham
     def move2(self, action, index):
     # Get the current position of the agent.
         # Get the current position of the agent.
         row, col = self._state[index],self._state[index+1]
         # Set the position in the grid to 0 because we are about to move away from it.
-        self.placement_grid[row, col] = 0
+        if self.placement_grid[row, col] != 2:
+            self.placement_grid[row, col] = 0
 
         #If agent is outside map, agent should not move
         if self._state[index] == -1 and self._state[index+1] == -1:
             return
-
-        #Stop agent if agent reaches flag
-        #if self._state[index] == self._state[2] and self._state[index+1] == self._state[3]:
 
         #state[0] and state[1] are now the flag positions instead of state[2] and state[3]
         if self._state[index] == self._state[0] and self._state[index+1] == self._state[1]:
@@ -191,10 +170,6 @@ class CTFEnv(py_environment.PyEnvironment):
 
             #End episode
             self._episode_ended = True
-
-            #Vanish from map
-            #self._state[index] = -1
-            #self._state[index+1] = -1
             return
         
         #Stop if agent is not in map
@@ -240,12 +215,17 @@ class CTFEnv(py_environment.PyEnvironment):
             self._state[index] = -1
             self._state[index+1] = -1
 
+            self.placement_grid[self._state[index], self._state[index+1]] = 0
+
+            self.placement_grid[self._state[0], self._state[1]] = 2
+
             self.all_agents_captured()
+            
 
         else:
             self.placement_grid[self._state[index], self._state[index+1]] = 4
     
-    #Allows separate defender agents to move
+    #Allows separate defender agents to move. Method was originally written by Josh Gendein but modified by Richard Pham
     def move3(self, action, index):
     # Get the current position of the agent.
         # Get the current position of the agent.
@@ -294,21 +274,15 @@ class CTFEnv(py_environment.PyEnvironment):
     def game_over(self):
         over = False
 
-        #row, col, frow, fcol = self._state[0],self._state[1],self._state[2],self._state[3]
-        #if row==frow and col==fcol:
-        #    over = True
-
         #Check if at least one agent reached flag
-        #for i in range(4+(self.num_walls*2), 4+(self.num_walls*2)+(self.num_sagents),2):
         for i in range(2+(self.num_walls*2), 2+(self.num_walls*2)+(self.num_sagents),2):
-            #if(self._state[i] == self._state[2] and self._state[i+1] == self._state[3]):
-
-            #state[0] and state[1] are now flag positions instead of main agent positions
+            #state[0] and state[1] are flag positions
             if(self._state[i] == self._state[0] and self._state[i+1] == self._state[1]):
                 over = True
 
         return over
     
+    #Grid reset, written by Josh Gendein
     def reset_grid(self):
         for i in range(0, len(self._state), 2):
             self.placement_grid[self._state[i]][self._state[i+1]] = 0
@@ -325,7 +299,7 @@ class CTFEnv(py_environment.PyEnvironment):
         for i in range(0, len(self.dagent_pos), 2):
             self.placement_grid[self.dagent_pos[i]][self.dagent_pos[i+1]] = 5
     
-    #Set color
+    #Set color, written by Josh Gendein
     def render(self, mode='rgb_array'):
         frame = np.full((self.screen_size, self.screen_size, 3), 255, dtype=np.uint8)
         for ix,iy in np.ndindex(self.placement_grid.shape):
@@ -347,7 +321,7 @@ class CTFEnv(py_environment.PyEnvironment):
                 self.fill_color(frame, ix, iy, [255, 0, 0])
         return np.flipud(frame)
     
-    #Fill color
+    #Fill color, written by Josh Gendein
     def fill_color(self, frame, x, y, color):
         l = x * self.block_size
         r = l + self.block_size
@@ -357,6 +331,7 @@ class CTFEnv(py_environment.PyEnvironment):
             for j in range(l, r):
                 frame[i, j] = color
     
+    #State, written by Josh Gendein
     def get_state(self):
         state = [
             #self.agent_pos[0],
@@ -375,12 +350,12 @@ class CTFEnv(py_environment.PyEnvironment):
     #    return (np.random.randint(self.grid_size), np.random.randint(self.grid_size))
     #    # return (0, 0)
 
-    #Flag position
+    #Flag position, written by Josh Gendein
     def get_flag_pos(self):
         return (np.random.randint(self.grid_size), np.random.randint(self.grid_size))
-        # return (15, 15)
+        #return (15, 15)
 
-    #Wall position
+    #Wall position. Written by Aliaksandr Nenartovich
     def get_wall_pos(self):
         wall_pos = []
         for _ in range(self.num_walls):
@@ -395,7 +370,7 @@ class CTFEnv(py_environment.PyEnvironment):
                     found = True
         return wall_pos
 
-    #Stealer Agent position
+    #Stealer Agent position. Written by Richard Pham
     def get_sagent_pos(self):
         sagent_pos = []
         for _ in range(self.num_sagents):
@@ -411,7 +386,7 @@ class CTFEnv(py_environment.PyEnvironment):
                     found = True
         return sagent_pos
 
-    #Defender Agent position
+    #Defender Agent position. Written by Richard Pham
     def get_dagent_pos(self):
         dagent_pos = []
         for _ in range(self.num_dagents):
