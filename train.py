@@ -33,7 +33,7 @@ from env import CTFEnv
 tf.compat.v1.enable_v2_behavior()
 
 #9 Hyperparameters, written by Josh Gendein, borrowed and modified from the tutorial in https://www.tensorflow.org/agents/tutorials/1_dqn_tutorial
-num_iterations = 30000 # @param {type:"integer"}
+num_iterations = 2000 # @param {type:"integer"}
 initial_collect_steps = 1000  # @param {type:"integer"} 
 collect_steps_per_iteration = 1  # @param {type:"integer"}
 replay_buffer_max_length = 100000  # @param {type:"integer"}

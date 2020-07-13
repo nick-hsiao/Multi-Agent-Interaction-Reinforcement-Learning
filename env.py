@@ -2,6 +2,9 @@ import abc
 import tensorflow as tf
 import numpy as np
 
+import tkinter as tk
+from PIL import Image, ImageTk
+
 from tf_agents.environments import py_environment
 from tf_agents.specs import array_spec
 from tf_agents.trajectories import time_step as ts
@@ -10,7 +13,19 @@ tf.compat.v1.enable_v2_behavior()
 
 #Code from the following links were used: https://www.tensorflow.org/agents/tutorials/1_dqn_tutorial and https://towardsdatascience.com/tf-agents-tutorial-a63399218309
 class CTFEnv(py_environment.PyEnvironment):
-    def __init__(self, grid_size=16, screen_size=512, num_walls=5, num_sagents=4, num_dagents=1):
+
+    def __init__(self, grid_size=5, screen_size=512, num_walls=12, num_sagents=10, num_dagents=2):
+
+        #Stop if too many entities
+        if grid_size*grid_size < (1 + (num_walls)  + (num_sagents) + (num_dagents)):
+            root = tk.Tk()
+            root.geometry("300x100")
+            root.title("Error")
+            text = tk.Label(root, text="The grid size is not big enough \n to support these entities!")
+            text.pack(pady = (0,0))
+            root.mainloop()
+            return
+
         #Set grid
         self.grid_size = grid_size
         self.placement_grid = np.zeros((self.grid_size, self.grid_size), dtype=np.uint8)
@@ -373,32 +388,53 @@ class CTFEnv(py_environment.PyEnvironment):
         return (np.random.randint(self.grid_size), np.random.randint(self.grid_size))
         #return (15, 15)
 
-    #Wall position. Written by Aliaksandr Nenartovich
+    #Wall position. Written by Aliaksandr Nenartovich and modified by Richard Pham
     def get_wall_pos(self):
         wall_pos = []
-        for _ in range(self.num_walls):
+        for i in range(self.num_walls):
             found = False
             while not found:
                 x = np.random.randint(self.grid_size)
                 y = np.random.randint(self.grid_size)
-                #if x != self.agent_pos[0] and y != self.agent_pos[1] and x != self.flag_pos[0] and y != self.flag_pos[1]:
-                if self.placement_grid[x, y] == 0 and x != self.flag_pos[0] and y != self.flag_pos[1]:
+
+                count = 0
+
+                for j in range (0,(i*2),2):
+                    #Spawn in empty location
+                    if x != self.flag_pos[0] or y != self.flag_pos[1]:
+                        if x != wall_pos[j] or y != wall_pos[j+1]:
+                            count = count+1
+                if count == i:
                     wall_pos.append(x)
                     wall_pos.append(y)
                     found = True
+                        
         return wall_pos
 
     #Stealer Agent position. Written by Richard Pham
     def get_sagent_pos(self):
         sagent_pos = []
-        for _ in range(self.num_sagents):
+        for i in range(self.num_sagents):
             found = False
             while not found:
                 x = np.random.randint(self.grid_size)
                 y = np.random.randint(self.grid_size)
 
-                #Spawn in empty location
-                if self.placement_grid[x, y] == 0 and x != self.flag_pos[0] and y != self.flag_pos[1]:
+                count = 0
+
+                for j in range (0,(i*2),2):
+                    #Spawn in empty location
+                    if x != self.flag_pos[0] or y != self.flag_pos[1]:
+                        if x != sagent_pos[j] or y != sagent_pos[j+1]:
+                            count = count+1
+
+                for j in range (0,(self.num_walls*2),2):
+                    #Spawn in empty location
+                    if x != self.flag_pos[0] or y != self.flag_pos[1]:
+                        if x != self.wall_pos[j] or y != self.wall_pos[j+1]:
+                            count = count+1
+
+                if count == i+self.num_walls:
                     sagent_pos.append(x)
                     sagent_pos.append(y)
                     found = True
@@ -407,14 +443,33 @@ class CTFEnv(py_environment.PyEnvironment):
     #Defender Agent position. Written by Richard Pham
     def get_dagent_pos(self):
         dagent_pos = []
-        for _ in range(self.num_dagents):
+        for i in range(self.num_dagents):
             found = False
             while not found:
                 x = np.random.randint(self.grid_size)
                 y = np.random.randint(self.grid_size)
 
-                #Spawn in empty location
-                if self.placement_grid[x, y] == 0 and x != self.flag_pos[0] and y != self.flag_pos[1]:
+                count = 0
+
+                for j in range (0,(i*2),2):
+                    #Spawn in empty location
+                    if x != self.flag_pos[0] or y != self.flag_pos[1]:
+                        if x != dagent_pos[j] or y != dagent_pos[j+1]:
+                            count = count+1
+
+                for j in range (0,(self.num_walls*2),2):
+                    #Spawn in empty location
+                    if x != self.flag_pos[0] or y != self.flag_pos[1]:
+                        if x != self.wall_pos[j] or y != self.wall_pos[j+1]:
+                            count = count+1
+                
+                for j in range (0,(self.num_sagents*2),2):
+                    #Spawn in empty location
+                    if x != self.flag_pos[0] or y != self.flag_pos[1]:
+                        if x != self.sagent_pos[j] or y != self.sagent_pos[j+1]:
+                            count = count+1
+
+                if count == i+(self.num_walls)+(self.num_sagents):
                     dagent_pos.append(x)
                     dagent_pos.append(y)
                     found = True
