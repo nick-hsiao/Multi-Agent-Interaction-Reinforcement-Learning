@@ -10,7 +10,7 @@ tf.compat.v1.enable_v2_behavior()
 
 #Code from the following links were used: https://www.tensorflow.org/agents/tutorials/1_dqn_tutorial and https://towardsdatascience.com/tf-agents-tutorial-a63399218309
 class CTFEnv(py_environment.PyEnvironment):
-    def __init__(self, grid_size=16, screen_size=512, num_walls=5, num_sagents=1, num_dagents=0):
+    def __init__(self, grid_size=16, screen_size=512, num_walls=5, num_sagents=4, num_dagents=4):
         #Set grid
         self.grid_size = grid_size
         self.placement_grid = np.zeros((self.grid_size, self.grid_size), dtype=np.uint8)
@@ -364,7 +364,7 @@ class CTFEnv(py_environment.PyEnvironment):
                 x = np.random.randint(self.grid_size)
                 y = np.random.randint(self.grid_size)
                 #if x != self.agent_pos[0] and y != self.agent_pos[1] and x != self.flag_pos[0] and y != self.flag_pos[1]:
-                if x != self.flag_pos[0] and y != self.flag_pos[1]:
+                if self.placement_grid[x, y] == 0 and x != self.flag_pos[0] and y != self.flag_pos[1]:
                     wall_pos.append(x)
                     wall_pos.append(y)
                     found = True
