@@ -10,7 +10,7 @@ tf.compat.v1.enable_v2_behavior()
 
 #Code from the following links were used: https://www.tensorflow.org/agents/tutorials/1_dqn_tutorial and https://towardsdatascience.com/tf-agents-tutorial-a63399218309
 class CTFEnv(py_environment.PyEnvironment):
-    def __init__(self, grid_size=16, screen_size=512, num_walls=5, num_sagents=4, num_dagents=4):
+    def __init__(self, grid_size=16, screen_size=512, num_walls=5, num_sagents=4, num_dagents=1):
         #Set grid
         self.grid_size = grid_size
         self.placement_grid = np.zeros((self.grid_size, self.grid_size), dtype=np.uint8)
@@ -158,6 +158,24 @@ class CTFEnv(py_environment.PyEnvironment):
         # Set the position in the grid to 0 because we are about to move away from it.
         if self.placement_grid[row, col] != 2:
             self.placement_grid[row, col] = 0
+
+        #Stop agent if stealer agent touches defender. Check all defenders
+        for i in range(0,(self.num_dagents*2),2):
+            if self._state[2+(self.num_walls*2)+(self.num_sagents*2)+i] == self._state[index] and self._state[2+(self.num_walls*2)+(self.num_sagents*2)+i+1] == self._state[index+1]:
+
+                #Vanish from map
+                self._state[index] = -1
+                self._state[index+1] = -1
+
+                self.placement_grid[self._state[index], self._state[index+1]] = 0
+
+                self.placement_grid[self._state[0], self._state[1]] = 2
+
+                self.all_agents_captured()
+                return
+
+
+           
 
         #If agent is outside map, agent should not move
         if self._state[index] == -1 and self._state[index+1] == -1:
