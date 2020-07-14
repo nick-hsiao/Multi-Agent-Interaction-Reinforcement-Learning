@@ -14,7 +14,7 @@ tf.compat.v1.enable_v2_behavior()
 #Code from the following links were used: https://www.tensorflow.org/agents/tutorials/1_dqn_tutorial and https://towardsdatascience.com/tf-agents-tutorial-a63399218309
 class CTFEnv(py_environment.PyEnvironment):
 
-    def __init__(self, grid_size=5, screen_size=512, num_walls=12, num_sagents=10, num_dagents=2):
+    def __init__(self, grid_size=16, screen_size=512, num_walls=0, num_sagents=1, num_dagents=0):
 
         #Stop if too many entities
         if grid_size*grid_size < (1 + (num_walls)  + (num_sagents) + (num_dagents)):
@@ -170,9 +170,7 @@ class CTFEnv(py_environment.PyEnvironment):
     # Get the current position of the agent.
         # Get the current position of the agent.
         row, col = self._state[index],self._state[index+1]
-        # Set the position in the grid to 0 because we are about to move away from it.
-        if self.placement_grid[row, col] != 2:
-            self.placement_grid[row, col] = 0
+ 
 
         #Stop agent if stealer agent touches defender. Check all defenders
         for i in range(0,(self.num_dagents*2),2):
@@ -182,15 +180,12 @@ class CTFEnv(py_environment.PyEnvironment):
                 self._state[index] = -1
                 self._state[index+1] = -1
 
-                self.placement_grid[self._state[index], self._state[index+1]] = 0
+                #self.placement_grid[self._state[index], self._state[index+1]] = 0
 
                 self.placement_grid[self._state[0], self._state[1]] = 2
 
                 self.all_agents_captured()
-                return
-
-
-           
+                return    
 
         #If agent is outside map, agent should not move
         if self._state[index] == -1 and self._state[index+1] == -1:
@@ -199,14 +194,10 @@ class CTFEnv(py_environment.PyEnvironment):
         #state[0] and state[1] are now the flag positions instead of state[2] and state[3]
         if self._state[index] == self._state[0] and self._state[index+1] == self._state[1]:
             #Reset flag color
-            self.placement_grid[row, col] = 2
+            self.placement_grid[self._state[index], self._state[index+1]] = 2
 
             #End episode
             self._episode_ended = True
-            return
-        
-        #Stop if agent is not in map
-        if self._state[index+1] == -1 or self._state[index] == -1:
             return
 
         if action == 0: #down
@@ -238,6 +229,19 @@ class CTFEnv(py_environment.PyEnvironment):
                 self._state[index] += 1
                 self._state[index+1] -= 1
 
+        #found = False
+        #Check if any agents are in the way before setting position to 0.
+        #for i in range(0,(self.num_sagents*2),2):
+
+            #Agent does not check itself
+        #    if (2+(self.num_walls*2)+i) != index:
+        #        if self._state[2+(self.num_walls*2)+i] == self._state[row] and self._state[2+(self.num_walls*2)+i+1] == self._state[col]:
+        #            found = True
+
+        # Set the position in the grid to 0 because we are moving away from it.
+        #if not found:
+            #self.placement_grid[row, col] = 0
+
         self.placement_grid[row, col] = 0
 
         
@@ -245,10 +249,11 @@ class CTFEnv(py_environment.PyEnvironment):
         if self.placement_grid[self._state[index], self._state[index+1]] == 5:
 
             #Vanish from map
+
+            self.placement_grid[self._state[index], self._state[index+1]] = 5
+
             self._state[index] = -1
             self._state[index+1] = -1
-
-            self.placement_grid[self._state[index], self._state[index+1]] = 0
 
             self.placement_grid[self._state[0], self._state[1]] = 2
 
@@ -258,13 +263,15 @@ class CTFEnv(py_environment.PyEnvironment):
         else:
             self.placement_grid[self._state[index], self._state[index+1]] = 4
     
+
+    
     #Allows separate defender agents to move. Method was originally written by Josh Gendein but modified by Richard Pham
     def move3(self, action, index):
     # Get the current position of the agent.
         # Get the current position of the agent.
         row, col = self._state[index],self._state[index+1]
         # Set the position in the grid to 0 because we are about to move away from it.
-        self.placement_grid[row, col] = 0
+        #self.placement_grid[row, col] = 0
 
         if action == 0: #down
             if row - 1 >= 0 and self.placement_grid[row-1][col] != 3 and self.placement_grid[row-1][col] != 2 and self.placement_grid[row-1][col] != 5:
@@ -295,7 +302,9 @@ class CTFEnv(py_environment.PyEnvironment):
                 self._state[index] += 1
                 self._state[index+1] -= 1
 
-        self.placement_grid[row, col] = 0
+        if row != self._state[index] or col != self._state[index+1]:
+            self.placement_grid[row, col] = 0
+
         self.placement_grid[self._state[index], self._state[index+1]] = 5
 
     #Game over when agent reaches flag
@@ -399,12 +408,14 @@ class CTFEnv(py_environment.PyEnvironment):
 
                 count = 0
 
+                if x != self.flag_pos[0] or y != self.flag_pos[1]:
+                    count = count+1
+
                 for j in range (0,(i*2),2):
                     #Spawn in empty location
-                    if x != self.flag_pos[0] or y != self.flag_pos[1]:
-                        if x != wall_pos[j] or y != wall_pos[j+1]:
-                            count = count+1
-                if count == i:
+                    if x != wall_pos[j] or y != wall_pos[j+1]:
+                        count = count+1
+                if count == 1+i:
                     wall_pos.append(x)
                     wall_pos.append(y)
                     found = True
@@ -422,19 +433,20 @@ class CTFEnv(py_environment.PyEnvironment):
 
                 count = 0
 
+                if x != self.flag_pos[0] or y != self.flag_pos[1]:
+                    count = count+1
+
                 for j in range (0,(i*2),2):
                     #Spawn in empty location
-                    if x != self.flag_pos[0] or y != self.flag_pos[1]:
-                        if x != sagent_pos[j] or y != sagent_pos[j+1]:
-                            count = count+1
+                    if x != sagent_pos[j] or y != sagent_pos[j+1]:
+                        count = count+1
 
                 for j in range (0,(self.num_walls*2),2):
                     #Spawn in empty location
-                    if x != self.flag_pos[0] or y != self.flag_pos[1]:
-                        if x != self.wall_pos[j] or y != self.wall_pos[j+1]:
-                            count = count+1
+                    if x != self.wall_pos[j] or y != self.wall_pos[j+1]:
+                        count = count+1
 
-                if count == i+self.num_walls:
+                if count == 1+i+self.num_walls:
                     sagent_pos.append(x)
                     sagent_pos.append(y)
                     found = True
@@ -451,11 +463,13 @@ class CTFEnv(py_environment.PyEnvironment):
 
                 count = 0
 
+                if x != self.flag_pos[0] or y != self.flag_pos[1]:
+                    count = count+1
+
                 for j in range (0,(i*2),2):
                     #Spawn in empty location
-                    if x != self.flag_pos[0] or y != self.flag_pos[1]:
-                        if x != dagent_pos[j] or y != dagent_pos[j+1]:
-                            count = count+1
+                    if x != dagent_pos[j] or y != dagent_pos[j+1]:
+                        count = count+1
 
                 for j in range (0,(self.num_walls*2),2):
                     #Spawn in empty location
@@ -465,11 +479,10 @@ class CTFEnv(py_environment.PyEnvironment):
                 
                 for j in range (0,(self.num_sagents*2),2):
                     #Spawn in empty location
-                    if x != self.flag_pos[0] or y != self.flag_pos[1]:
-                        if x != self.sagent_pos[j] or y != self.sagent_pos[j+1]:
-                            count = count+1
+                    if x != self.sagent_pos[j] or y != self.sagent_pos[j+1]:
+                        count = count+1
 
-                if count == i+(self.num_walls)+(self.num_sagents):
+                if count == 1+i+(self.num_walls)+(self.num_sagents):
                     dagent_pos.append(x)
                     dagent_pos.append(y)
                     found = True
