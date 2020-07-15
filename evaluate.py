@@ -2,9 +2,7 @@ import tensorflow as tf
 from tf_agents.environments import wrappers, tf_py_environment
 from env import CTFEnv
 import imageio
-
-import tkinter as tk
-from PIL import Image, ImageTk
+import sys
 
 #Code from the following links were used: https://www.tensorflow.org/agents/tutorials/1_dqn_tutorial
 
@@ -12,7 +10,11 @@ model_path = "policies/policy_static_goal_dynamic_reward"
 filename = "videos/example_training"
 filename = filename + ".mp4"
 
-py_env = wrappers.TimeLimit(CTFEnv(), duration=100)
+grid_size = int(sys.argv[1])
+num_walls = int(sys.argv[2])
+num_agents = int(sys.argv[3])
+
+py_env = wrappers.TimeLimit(CTFEnv(grid_size, 512, num_walls, num_agents, num_agents), duration=100)
 
 env = tf_py_environment.TFPyEnvironment(py_env)
 
@@ -27,11 +29,3 @@ with imageio.get_writer(filename, fps=15) as video:
             action_step = policy.action(time_step)
             time_step = env.step(action_step.action)
             video.append_data(py_env.render())
-
-#Notify user video is done
-root = tk.Tk()
-root.geometry("300x100")
-root.title("Complete")
-text = tk.Label(root, text="Video has been generated!")
-text.pack(pady = (0,0))
-root.mainloop()
