@@ -13,8 +13,9 @@ filename = filename + ".mp4"
 grid_size = int(sys.argv[1])
 num_walls = int(sys.argv[2])
 num_agents = int(sys.argv[3])
+def_agents = int(sys.argv[4])
 
-py_env = wrappers.TimeLimit(CTFEnv(grid_size, 512, num_walls, num_agents, num_agents), duration=100)
+py_env = wrappers.TimeLimit(CTFEnv(grid_size, 512, num_walls, num_agents, def_agents), duration=100)
 
 env = tf_py_environment.TFPyEnvironment(py_env)
 
