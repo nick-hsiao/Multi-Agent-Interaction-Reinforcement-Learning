@@ -25,6 +25,7 @@ from tf_agents.policies import policy_saver
 
 import matplotlib
 import matplotlib.pyplot as plt
+import sys
 
 from env import CTFEnv
 
@@ -45,8 +46,14 @@ eval_interval = 1000  # @param {type:"integer"}
 
 #Training environment, written by Josh Gendein, borrowed and modified from the tutorial in https://www.tensorflow.org/agents/tutorials/1_dqn_tutorial
 #Simulation will last 200 steps
-train_py_env = wrappers.TimeLimit(CTFEnv(), duration=200)
-eval_py_env = wrappers.TimeLimit(CTFEnv(), duration=200)
+
+grid_size = int(sys.argv[1])
+num_walls = int(sys.argv[2])
+num_agents = int(sys.argv[3])
+c = CTFEnv(grid_size, 512, num_walls, num_agents, num_agents)
+
+train_py_env = wrappers.TimeLimit(c, duration=200)
+eval_py_env = wrappers.TimeLimit(c, duration=200)
 
 
 #Training environment, written by Josh Gendein, borrowed and modified from the tutorial in https://www.tensorflow.org/agents/tutorials/1_dqn_tutorial
