@@ -13,9 +13,7 @@ tf.compat.v1.enable_v2_behavior()
 
 #Code from the following links were used: https://www.tensorflow.org/agents/tutorials/1_dqn_tutorial and https://towardsdatascience.com/tf-agents-tutorial-a63399218309
 class CTFEnv(py_environment.PyEnvironment):
-
-    def __init__(self, grid_size=16, screen_size=512, num_walls=0, num_sagents=1, num_dagents=0):
-
+    def __init__(self, grid_size, screen_size, num_walls, num_sagents, num_dagents):
         #Stop if too many entities
         if grid_size*grid_size < (1 + (num_walls)  + (num_sagents) + (num_dagents)):
             root = tk.Tk()
@@ -25,7 +23,7 @@ class CTFEnv(py_environment.PyEnvironment):
             text.pack(pady = (0,0))
             root.mainloop()
             return
-
+        
         #Set grid
         self.grid_size = grid_size
         self.placement_grid = np.zeros((self.grid_size, self.grid_size), dtype=np.uint8)
