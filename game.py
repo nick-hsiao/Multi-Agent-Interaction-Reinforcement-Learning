@@ -6,13 +6,13 @@ import subprocess
 
 #User interface of application, written by Aliaksandr Nenartovich
 def play():
-	subprocess.call(["python3", "train.py", size_entered.get(), walls_entered.get(), agents_entered.get()])
+	subprocess.call(["python3", "train.py", size_entered.get(), walls_entered.get(), agents_entered.get(), def_agents_entered.get()])
 
 def make_video():
-	subprocess.call(["python3", "evaluate.py", size_entered.get(), walls_entered.get(), agents_entered.get()])
+	subprocess.call(["python3", "evaluate.py", size_entered.get(), walls_entered.get(), agents_entered.get(), def_agents_entered.get()])
 
 root = tk.Tk()
-root.geometry("850x610")
+root.geometry("1000x610")
 root.title("Multi-Agent Interaction")
 
 def quit():
@@ -24,9 +24,12 @@ size_entered = tk.Entry(root, width=4, textvariable = grid)
 wall_label = tk.Label(root, text = "Number of walls:")
 walls = tk.StringVar()
 walls_entered = tk.Entry(root, width = 4, textvariable = walls)
-agent_label = tk.Label(root, text = "Number of Agents on Each Team:")
+agent_label = tk.Label(root, text = "Number of Stealer Agents:")
 agents = tk.StringVar()
 agents_entered = tk.Entry(root, width=4, textvariable = agents)
+def_agent_label = tk.Label(root, text = "Number of Defender Agents:")
+def_agents = tk.StringVar()
+def_agents_entered = tk.Entry(root, width=4, textvariable = def_agents)
 
 btn1 = tk.Button(root, text="Run Program", command=play)
 video = tk.Button(root, text="Create Video", command=make_video)
@@ -53,6 +56,8 @@ wall_label.pack(padx = 0, side = tk.LEFT)
 walls_entered.pack(padx = (5,40), side = tk.LEFT)
 agent_label.pack(padx = 0, side = tk.LEFT)
 agents_entered.pack(padx = 0, side = tk.LEFT)
+def_agent_label.pack(padx = 0, side = tk.LEFT)
+def_agents_entered.pack(padx = 0, side = tk.LEFT)
 
 btn1.pack(pady=(0,10))
 video.pack(pady=(0,10))
