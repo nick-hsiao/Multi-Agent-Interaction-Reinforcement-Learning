@@ -44,8 +44,6 @@ log_interval = 200  # @param {type:"integer"}
 num_eval_episodes = 10  # @param {type:"integer"}
 eval_interval = 1000  # @param {type:"integer"}
 
-#Training environment, written by Josh Gendein, borrowed and modified from the tutorial in https://www.tensorflow.org/agents/tutorials/1_dqn_tutorial
-#Simulation will last 200 steps
 
 if(str.isdigit(sys.argv[1])):
     grid_size = int(sys.argv[1])
@@ -69,6 +67,8 @@ else:
 
 c = CTFEnv(grid_size, 512, num_walls, num_agents, def_agents)
 
+#Training environment, written by Josh Gendein, borrowed and modified from the tutorial in https://www.tensorflow.org/agents/tutorials/1_dqn_tutorial
+#Simulation will last 200 steps
 train_py_env = wrappers.TimeLimit(c, duration=200)
 eval_py_env = wrappers.TimeLimit(c, duration=200)
 
