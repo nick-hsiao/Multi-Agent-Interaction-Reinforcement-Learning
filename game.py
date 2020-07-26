@@ -18,10 +18,10 @@ root.title("Multi-Agent Interaction")
 def quit():
 	root.destroy()
 
-grid_label = tk.Label(root, text = "Grid size:")
+grid_label = tk.Label(root, text = "Grid Size:")
 grid = tk.StringVar()
 size_entered = tk.Entry(root, width=4, textvariable = grid)
-wall_label = tk.Label(root, text = "Number of walls:")
+wall_label = tk.Label(root, text = "Number of Walls:")
 walls = tk.StringVar()
 walls_entered = tk.Entry(root, width = 4, textvariable = walls)
 agent_label = tk.Label(root, text = "Number of Stealer Agents:")
@@ -45,11 +45,12 @@ enter = tk.Label(root, text="Please Fill in All Fields Below:")
 #Change text size, from https://stackoverflow.com/questions/30685308/how-do-i-change-the-text-size-in-a-label-widget-python-tkinter
 text.config(font=("Arial", 25))
 enter.config(font=("Arial", 20))
+background_label.configure(background='black')
 
 text.pack(pady = (0,0))
 background_label.pack()
 
-enter.pack(pady=(50,0))
+enter.pack(pady=(30,0))
 grid_label.pack(padx = (50,0), side = tk.LEFT)
 size_entered.pack(padx = (5,40), side = tk.LEFT)
 wall_label.pack(padx = 0, side = tk.LEFT)
