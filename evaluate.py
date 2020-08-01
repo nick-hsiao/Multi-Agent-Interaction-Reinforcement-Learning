@@ -14,21 +14,25 @@ model_path = "policies/policy_static_goal_dynamic_reward"
 filename = "videos/example_training"
 filename = filename + ".mp4"
 
+#Check if string from input is a valid digit before interpreting it (str.isdigit). Got help from https://stackoverflow.com/questions/1265665/how-can-i-check-if-a-string-represents-an-int-without-using-try-except
 if(str.isdigit(sys.argv[1])):
     grid_size = int(sys.argv[1])
 else:
     grid_size = 0
 
+#Check if string from input is a valid digit before interpreting it (str.isdigit). Got help from https://stackoverflow.com/questions/1265665/how-can-i-check-if-a-string-represents-an-int-without-using-try-except
 if(str.isdigit(sys.argv[2])):
     num_walls = int(sys.argv[2])
 else:
     num_walls = 0
 
+#Check if string from input is a valid digit before interpreting it (str.isdigit). Got help from https://stackoverflow.com/questions/1265665/how-can-i-check-if-a-string-represents-an-int-without-using-try-except
 if(str.isdigit(sys.argv[3])):
     num_agents = int(sys.argv[3])
 else:
     num_agents = 0
 
+#Check if string from input is a valid digit before interpreting it (str.isdigit). Got help from https://stackoverflow.com/questions/1265665/how-can-i-check-if-a-string-represents-an-int-without-using-try-except
 if(str.isdigit(sys.argv[4])):
     def_agents = int(sys.argv[4])
 else:
