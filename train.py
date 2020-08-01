@@ -44,31 +44,15 @@ log_interval = 200  # @param {type:"integer"}
 num_eval_episodes = 10  # @param {type:"integer"}
 eval_interval = 1000  # @param {type:"integer"}
 
-
-if(str.isdigit(sys.argv[1])):
-    grid_size = int(sys.argv[1])
-else:
-    grid_size = 0
-
-if(str.isdigit(sys.argv[2])):
-    num_walls = int(sys.argv[2])
-else:
-    num_walls = 0
-
-if(str.isdigit(sys.argv[3])):
-    num_agents = int(sys.argv[3])
-else:
-    num_agents = 0
-
-if(str.isdigit(sys.argv[4])):
-    def_agents = int(sys.argv[4])
-else:
-    def_agents = 0
-
-c = CTFEnv(grid_size, 512, num_walls, num_agents, def_agents)
-
 #Training environment, written by Josh Gendein, borrowed and modified from the tutorial in https://www.tensorflow.org/agents/tutorials/1_dqn_tutorial
 #Simulation will last 200 steps
+
+grid_size = int(sys.argv[1])
+num_walls = int(sys.argv[2])
+num_agents = int(sys.argv[3])
+def_agents = int(sys.argv[4])
+c = CTFEnv(grid_size, 512, num_walls, num_agents, def_agents)
+
 train_py_env = wrappers.TimeLimit(c, duration=200)
 eval_py_env = wrappers.TimeLimit(c, duration=200)
 
