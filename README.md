@@ -4,3 +4,11 @@ Applying reinforcement learning techniques to multiple agents in a custom enviro
 To install external packages:
 
 ```pip install -r requirements.txt```
+
+
+If you have trouble running the application:
+
+Possible Problems:
+1. The script expects your python alias to be ```python3 file.py```
+    if it is not this change lines 9 and 12 in game.py.
+    e.g. ```subprocess.call(["python"... ```
