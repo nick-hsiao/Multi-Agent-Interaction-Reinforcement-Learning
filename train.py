@@ -25,43 +25,53 @@ from tf_agents.policies import policy_saver
 
 import matplotlib
 import matplotlib.pyplot as plt
+import sys
 
 from env import CTFEnv
 
+#Code from the following links were used: https://www.tensorflow.org/agents/tutorials/1_dqn_tutorial and https://towardsdatascience.com/tf-agents-tutorial-a63399218309
+
 tf.compat.v1.enable_v2_behavior()
 
+#9 Hyperparameters, written by Josh Gendein, borrowed and modified from the tutorial in https://www.tensorflow.org/agents/tutorials/1_dqn_tutorial
 num_iterations = 30000 # @param {type:"integer"}
-
 initial_collect_steps = 1000  # @param {type:"integer"} 
 collect_steps_per_iteration = 1  # @param {type:"integer"}
 replay_buffer_max_length = 100000  # @param {type:"integer"}
-
 batch_size = 64  # @param {type:"integer"}
 learning_rate = 1e-5  # @param {type:"number"}
 log_interval = 200  # @param {type:"integer"}
-
 num_eval_episodes = 10  # @param {type:"integer"}
 eval_interval = 1000  # @param {type:"integer"}
 
+#Training environment, written by Josh Gendein, borrowed and modified from the tutorial in https://www.tensorflow.org/agents/tutorials/1_dqn_tutorial
 #Simulation will last 200 steps
-train_py_env = wrappers.TimeLimit(CTFEnv(), duration=200)
-eval_py_env = wrappers.TimeLimit(CTFEnv(), duration=200)
 
+grid_size = int(sys.argv[1])
+num_walls = int(sys.argv[2])
+num_agents = int(sys.argv[3])
+def_agents = int(sys.argv[4])
+c = CTFEnv(grid_size, 512, num_walls, num_agents, def_agents)
+
+train_py_env = wrappers.TimeLimit(c, duration=200)
+eval_py_env = wrappers.TimeLimit(c, duration=200)
+
+
+#Training environment, written by Josh Gendein, borrowed and modified from the tutorial in https://www.tensorflow.org/agents/tutorials/1_dqn_tutorial
 train_env = tf_py_environment.TFPyEnvironment(train_py_env)
 eval_env = tf_py_environment.TFPyEnvironment(eval_py_env)
 
+#Q Network, written by Josh Gendein, borrowed and modified from the tutorial in https://www.tensorflow.org/agents/tutorials/1_dqn_tutorial
 fc_layer_params = (2000,)
-
 q_net = q_network.QNetwork(
     train_env.observation_spec(),
     train_env.action_spec(),
     fc_layer_params=fc_layer_params
 )
 
+#Q Network Optimizer, written by Josh Gendein, borrowed from the tutorial in https://www.tensorflow.org/agents/tutorials/1_dqn_tutorial
 optimizer = tf.compat.v1.train.AdamOptimizer(learning_rate=learning_rate)
-
 train_step_counter = tf.compat.v2.Variable(0)
-
 agent = dqn_agent.DqnAgent(
     train_env.time_step_spec(),
     train_env.action_spec(),
@@ -70,17 +80,13 @@ agent = dqn_agent.DqnAgent(
     td_errors_loss_fn=common.element_wise_squared_loss,
     train_step_counter=train_step_counter
 )
-
 agent.initialize()
 
+#Q Network, written by Josh Gendein, from the tutorial in https://www.tensorflow.org/agents/tutorials/1_dqn_tutorial
 eval_policy = agent.policy
 collect_policy = agent.collect_policy
 
-# random_policy = random_tf_policy.RandomTFPolicy(
-#     train_env.time_step_spec(), 
-#     train_env.action_spec()
-# )
-
+#Training metrics, written by Josh Gendein, borrowed from the tutorial in https://towardsdatascience.com/tf-agents-tutorial-a63399218309
 train_metrics = [
             tf_metrics.NumberOfEpisodes(),
             tf_metrics.EnvironmentSteps(),
@@ -88,7 +94,7 @@ train_metrics = [
             tf_metrics.AverageEpisodeLengthMetric(),
 ]
 
-
+#Average return method, written by Josh Gendein, from the tutorial in https://www.tensorflow.org/agents/tutorials/1_dqn_tutorial
 def compute_avg_return(environment, policy, num_episodes=10):
     total_return = 0.0
     for _ in range(num_episodes):
@@ -103,17 +109,17 @@ def compute_avg_return(environment, policy, num_episodes=10):
     avg_return = total_return / num_episodes
     return avg_return.numpy()[0]
 
-# print(compute_avg_return(eval_env, random_policy, num_eval_episodes))
-
-
+#Replay buffer, written by Josh Gendein, from the tutorial in https://www.tensorflow.org/agents/tutorials/1_dqn_tutorial
 replay_buffer = tf_uniform_replay_buffer.TFUniformReplayBuffer(
     data_spec=agent.collect_data_spec,
     batch_size=train_env.batch_size,
     max_length=replay_buffer_max_length,
 )
 
+#Replay observer, written by Josh Gendein, from the tutorial in https://towardsdatascience.com/tf-agents-tutorial-a63399218309
 replay_observer = [replay_buffer.add_batch]
 
+#Collect step method, written by Josh Gendein, from the tutorial in https://www.tensorflow.org/agents/tutorials/1_dqn_tutorial
 def collect_step(environment, policy, buffer):
   time_step = environment.current_time_step()
   action_step = policy.action(time_step)
@@ -123,17 +129,18 @@ def collect_step(environment, policy, buffer):
   # Add trajectory to the replay buffer
   buffer.add_batch(traj)
 
+#Collect data method, written by Josh Gendein, from the tutorial in https://www.tensorflow.org/agents/tutorials/1_dqn_tutorial
 def collect_data(env, policy, buffer, steps):
   for _ in range(steps):
     collect_step(env, policy, buffer)
-
-# collect_data(train_env, collect_policy, replay_buffer, steps=100)
-
+    
+#Dataset, written by Josh Gendein, from the tutorial in https://www.tensorflow.org/agents/tutorials/1_dqn_tutorial
 dataset = replay_buffer.as_dataset(
     num_parallel_calls=3, 
     sample_batch_size=batch_size, 
     num_steps=2).prefetch(3)
 
+#Driver, written by Josh Gendein, from the tutorial in https://towardsdatascience.com/tf-agents-tutorial-a63399218309
 driver = dynamic_step_driver.DynamicStepDriver(
             train_env,
             collect_policy,
@@ -142,8 +149,8 @@ driver = dynamic_step_driver.DynamicStepDriver(
 
 iterator = iter(dataset)
 
-
-# (Optional) Optimize by wrapping some of the code in a graph using TF function.
+#The process of training the agent, written by Josh Gendein, from the tutorial in https://www.tensorflow.org/agents/tutorials/1_dqn_tutorial
+# Optimize by wrapping some of the code in a graph using TF function.
 agent.train = common.function(agent.train)
 
 # Reset the train step
@@ -154,7 +161,7 @@ final_time_step, policy_state = driver.run()
 for i in range(1000):
     final_time_step, _ = driver.run(final_time_step, policy_state)
 
-# Evaluate the agent's policy once before training.
+# Evaluate the agent's policy once before training
 avg_return = compute_avg_return(eval_env, agent.policy, num_eval_episodes)
 returns = [avg_return]
 episode_len = []
@@ -162,10 +169,6 @@ step_len = []
 for _ in range(num_iterations):
 
     final_time_step, _ = driver.run(final_time_step, policy_state)
-
-#   # Collect a few steps using collect_policy and save to the replay buffer.
-#   for _ in range(collect_steps_per_iteration):
-#     collect_step(train_env, agent.collect_policy, replay_buffer)
 
   # Sample a batch of data from the buffer and update the agent's network.
     experience, unused_info = next(iterator)
@@ -184,12 +187,13 @@ for _ in range(num_iterations):
         returns.append(avg_return)
 
 
-# iterations = range(0, num_iterations + 1, eval_interval)
+#Plot graph after training, written by Josh Gendein, borrowed and modified from https://www.tensorflow.org/agents/tutorials/1_dqn_tutorial
 plt.plot(step_len, episode_len)
 plt.ylabel('Episodes')
 plt.xlabel('Average Episode Length (Steps)')
 plt.show()
 
+#Create video method, written by Josh Gendein, from https://www.tensorflow.org/agents/tutorials/1_dqn_tutorial
 def create_policy_eval_video(policy, filename, num_episodes=5, fps=30):
     filename = filename + ".mp4"
     with imageio.get_writer(f'videos/{filename}', fps=fps) as video:
@@ -201,11 +205,11 @@ def create_policy_eval_video(policy, filename, num_episodes=5, fps=30):
                 time_step = eval_env.step(action_step.action)
                 video.append_data(eval_py_env.render())
 
+
 def save_policy(policy, filename):
     saver = policy_saver.PolicySaver(policy, batch_size=None)
     saver.save('policies/policy_%s' % filename)
 
 filename='static_goal_dynamic_reward'
 
-# create_policy_eval_video(policy=agent.policy, filename=filename, fps=15)
 save_policy(agent.policy, filename)
