@@ -3,12 +3,17 @@ Applying reinforcement learning techniques to multiple agents in a custom enviro
 
 ![](images/landing.gif)
 
+This projects uses reinforcement learning to try and simulate a competitive Capture-the-Flag game played between two teams in the environment with static obstacles (walls) present.
 
-To install external packages:
+To run the program, first clone this repository into your local folder.
+
+Make sure that Python is installed on your system.
+
+To install external packages, from the project's root directory run:
 
 ```pip install -r requirements.txt```
 
-How to run the application:  
+How to run the application: from the root directory run:  
     ``` python game.py ```  
     Then follow the instructions on the GUI.
 
