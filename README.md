@@ -8,6 +8,10 @@ To install external packages:
 
 ```pip install -r requirements.txt```
 
+How to run the application:
+    ``` python game.py ```
+    Then follow the instructions on the GUI.
+
 
 If you have trouble running the application:
 
