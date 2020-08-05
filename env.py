@@ -125,14 +125,12 @@ class CTFEnv(py_environment.PyEnvironment):
             # (i) If game over, then give reward
             # (ii) If game not over, no reward
             if self.game_over():
-                #reward = 25000
                 reward = 100
             else:
                 reward = 0
             return ts.termination(self._state, reward)
         else:
             return ts.transition(
-                #self._state, reward=0, discount=50.00)
                 self._state, reward=0, discount=0.9)
 
     #Check if all agents were captured. Written by Richard Pham
