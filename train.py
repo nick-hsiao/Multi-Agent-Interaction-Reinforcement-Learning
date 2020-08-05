@@ -162,7 +162,7 @@ final_time_step, policy_state = driver.run()
 for i in range(1000):
     final_time_step, _ = driver.run(final_time_step, policy_state)
 
-# Evaluate the agent's policy once before training, written by Josh Gendein, from the tutorial in https://www.tensorflow.org/agents/tutorials/1_dqn_tutorial
+# Evaluate the agent's policy once before training, written by Josh Gendein, borrowed and modified from the tutorial in https://www.tensorflow.org/agents/tutorials/1_dqn_tutorial
 # Lines 167 to 190
 avg_return = compute_avg_return(eval_env, agent.policy, num_eval_episodes)
 returns = [avg_return]
