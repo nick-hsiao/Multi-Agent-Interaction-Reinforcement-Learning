@@ -144,7 +144,6 @@ class CTFEnv(py_environment.PyEnvironment):
         num_coordinates = 0
 
         #End game if all stealer agents are stopped
-        #for i in range(4+(self.num_walls*2), 4+(self.num_walls*2)+(self.num_sagents*2),2):
         for i in range(2+(self.num_walls*2), 2+(self.num_walls*2)+(self.num_sagents*2),2):
 
             num_coordinates = num_coordinates + 2
@@ -163,7 +162,6 @@ class CTFEnv(py_environment.PyEnvironment):
 
     #Allows separate stealer agents to move. Method was originally written by Josh Gendein but modified by Richard Pham
     def move2(self, action, index):
-    # Get the current position of the agent.
         # Get the current position of the agent.
         row, col = self._state[index],self._state[index+1]
  
@@ -176,7 +174,6 @@ class CTFEnv(py_environment.PyEnvironment):
                 self._state[index] = -1
                 self._state[index+1] = -1
 
-                #self.placement_grid[self._state[index], self._state[index+1]] = 0
 
                 self.placement_grid[self._state[0], self._state[1]] = 2
 
@@ -225,19 +222,6 @@ class CTFEnv(py_environment.PyEnvironment):
                 self._state[index] += 1
                 self._state[index+1] -= 1
 
-        #found = False
-        #Check if any agents are in the way before setting position to 0.
-        #for i in range(0,(self.num_sagents*2),2):
-
-            #Agent does not check itself
-        #    if (2+(self.num_walls*2)+i) != index:
-        #        if self._state[2+(self.num_walls*2)+i] == self._state[row] and self._state[2+(self.num_walls*2)+i+1] == self._state[col]:
-        #            found = True
-
-        # Set the position in the grid to 0 because we are moving away from it.
-        #if not found:
-            #self.placement_grid[row, col] = 0
-
         self.placement_grid[row, col] = 0
 
         
@@ -263,11 +247,8 @@ class CTFEnv(py_environment.PyEnvironment):
     
     #Allows separate defender agents to move. Method was originally written by Josh Gendein but modified by Richard Pham
     def move3(self, action, index):
-    # Get the current position of the agent.
         # Get the current position of the agent.
         row, col = self._state[index],self._state[index+1]
-        # Set the position in the grid to 0 because we are about to move away from it.
-        #self.placement_grid[row, col] = 0
 
         if action == 0: #down
             if row - 1 >= 0 and self.placement_grid[row-1][col] != 3 and self.placement_grid[row-1][col] != 2 and self.placement_grid[row-1][col] != 5:
@@ -303,10 +284,6 @@ class CTFEnv(py_environment.PyEnvironment):
 
         self.placement_grid[self._state[index], self._state[index+1]] = 5
 
-    #Game over when agent reaches flag
-    #def game_over(self):
-    #    row, col, frow, fcol = self._state[0],self._state[1],self._state[2],self._state[3]
-    #    return row==frow and col==fcol
 
     #Game over when agent reaches flag
     def game_over(self):
@@ -382,11 +359,6 @@ class CTFEnv(py_environment.PyEnvironment):
         state.extend(self.dagent_pos)
 
         return np.array(state, dtype=np.int32)
-
-    #Agent position
-    #def get_agent_pos(self):
-    #    return (np.random.randint(self.grid_size), np.random.randint(self.grid_size))
-    #    # return (0, 0)
 
     #Flag position, written by Josh Gendein
     def get_flag_pos(self):
