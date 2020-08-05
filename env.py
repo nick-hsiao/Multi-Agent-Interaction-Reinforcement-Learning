@@ -297,7 +297,7 @@ class CTFEnv(py_environment.PyEnvironment):
 
         return over
     
-    #Grid reset, written by Josh Gendein
+    #Grid reset, written by Josh Gendein and Richard Pham
     def reset_grid(self):
         for i in range(0, len(self._state), 2):
             self.placement_grid[self._state[i]][self._state[i+1]] = 0
@@ -314,7 +314,7 @@ class CTFEnv(py_environment.PyEnvironment):
         for i in range(0, len(self.dagent_pos), 2):
             self.placement_grid[self.dagent_pos[i]][self.dagent_pos[i+1]] = 5
     
-    #Set color, written by Josh Gendein and Richard Pham
+    #Set color, written by Josh Gendein
     def render(self, mode='rgb_array'):
         frame = np.full((self.screen_size, self.screen_size, 3), 255, dtype=np.uint8)
         for ix,iy in np.ndindex(self.placement_grid.shape):
