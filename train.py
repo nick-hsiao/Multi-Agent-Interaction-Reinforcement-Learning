@@ -206,7 +206,7 @@ def create_policy_eval_video(policy, filename, num_episodes=5, fps=30):
                 time_step = eval_env.step(action_step.action)
                 video.append_data(eval_py_env.render())
 
-
+#Written by Josh Gendein
 def save_policy(policy, filename):
     saver = policy_saver.PolicySaver(policy, batch_size=None)
     saver.save('policies/policy_%s' % filename)
