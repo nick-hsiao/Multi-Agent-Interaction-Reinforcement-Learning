@@ -83,7 +83,7 @@ agent = dqn_agent.DqnAgent(
 )
 agent.initialize()
 
-#Q Network, written by Josh Gendein, from the tutorial in https://www.tensorflow.org/agents/tutorials/1_dqn_tutorial
+#Policy, written by Josh Gendein, from the tutorial in https://www.tensorflow.org/agents/tutorials/1_dqn_tutorial
 eval_policy = agent.policy
 collect_policy = agent.collect_policy
 
