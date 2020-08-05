@@ -160,7 +160,7 @@ class CTFEnv(py_environment.PyEnvironment):
             #End game if all stealer agents are stopped
             self._episode_ended = True       
 
-    #Allows separate stealer agents to move. Method was originally written by Josh Gendein but modified by Richard Pham
+    #Allows separate stealer agents to move. Method was originally written by Josh Gendein but modified by Richard Pham. move() method was modified from https://towardsdatascience.com/tf-agents-tutorial-a63399218309
     def move2(self, action, index):
         # Get the current position of the agent.
         row, col = self._state[index],self._state[index+1]
@@ -245,7 +245,7 @@ class CTFEnv(py_environment.PyEnvironment):
     
 
     
-    #Allows separate defender agents to move. Method was originally written by Josh Gendein but modified by Richard Pham
+    #Allows separate defender agents to move. Method was originally written by Josh Gendein but modified by Richard Pham. move() method was modified from https://towardsdatascience.com/tf-agents-tutorial-a63399218309
     def move3(self, action, index):
         # Get the current position of the agent.
         row, col = self._state[index],self._state[index+1]
